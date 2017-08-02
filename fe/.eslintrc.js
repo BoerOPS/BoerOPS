@@ -26,7 +26,7 @@ module.exports = {
     //
     // add by boer
     //
-    'semi': "error",
-    'no-extra-semi': "error"
+    'semi': 0,
+    'no-extra-semi': 0
   }
 }
