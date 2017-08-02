@@ -4,3 +4,6 @@ venv
 *.log
 static
 */node_modules
+.history
+.vscode
+.project
