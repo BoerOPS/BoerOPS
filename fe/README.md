@@ -1,6 +1,6 @@
 # fe
 
-> BoerOPS Frontend Project
+> A Vue.js project
 
 ## Build Setup
 
