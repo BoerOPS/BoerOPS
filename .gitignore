@@ -1,0 +1,6 @@
+venv
+.idea
+*.pyc
+*.log
+static
+*/node_modules
