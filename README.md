@@ -3,7 +3,7 @@
 ## Usage
 
 ### Pyhon 3.5
-```
+```bash
 安装Python
 > https://www.python.org/downloads/release/python-353/
 安装Python包管理器pip
@@ -15,7 +15,7 @@ which virtualenv
 ```
 
 ### Node / NVM
-```
+```bash
 NodeJS版本管理器
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
 source ~/.bashrc
@@ -28,7 +28,7 @@ which npm
 ```
 
 ### Run Dev
-```
+```bash
 git clone git@github.com:BoerOPS/BoerOPS.git
 # Node环境
 cd BoerOPS/fe
