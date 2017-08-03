@@ -3,6 +3,7 @@ venv
 *.pyc
 *.log
 static
+templates
 */node_modules
 .history
 .vscode
