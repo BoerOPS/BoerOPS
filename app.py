@@ -23,9 +23,11 @@ def create_app(config_name):
     from views.deploys import bp as deploy_bp
     from views.projects import bp as project_bp
     from views.users import bp as user_bp
+    from views.webhooks import bp as webhook_bp
     app.register_blueprint(deploy_bp)
     app.register_blueprint(project_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(webhook_bp)
 
     return app
 
