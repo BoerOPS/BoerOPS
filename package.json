@@ -1,0 +1,9 @@
+{
+  "name": "boerops",
+  "version": "1.0.0",
+  "description": "boerops",
+  "author": "boer <boer0924@qq.com>",
+  "scripts": {
+    "py": "python runserver.py"
+  }
+}
