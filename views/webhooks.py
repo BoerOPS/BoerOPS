@@ -2,7 +2,11 @@ import json
 
 from flask import Blueprint, render_template, request
 
+from models.commits import Commit
+from models.tests import Test
+
 bp = Blueprint('webhook', __name__)
+
 
 @bp.route('/pushhook', methods=['POST'])
 def push_hook():
@@ -21,16 +25,25 @@ def push_hook():
     user_name = body['user_name']
     user_email = body['user_email']
 
-    commits = [(item['id'], item['message'], item['url'], item['timestamp']) for item in body['commits']]
-    print(project_name)
-    print(ref)
-    print(user_name)
-    print(commits)
+    commits = ((item['id'], item['message'], item['url'], item['timestamp'])
+               for item in body['commits'])
+    for c in commits:
+        Commit.create(
+            project_id=project_id,
+            project_name=project_name,
+            ref=ref,
+            commit_id=c[0],
+            commit_msg=c[1],
+            commit_url=c[2],
+            commit_timestamp=c[3],
+            user_id=user_id,
+            user_username=user_username,
+            user_name=user_name,
+            user_email=user_email)
     return ''
 
-from models.tests import Test
 
-@bp.route('/orm_test')
+@bp.route('/orm_test/<name>')
 def orm_test(name):
     Test.create(name=name)
     return 'done'

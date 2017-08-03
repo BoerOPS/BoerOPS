@@ -1,7 +1,7 @@
 from app import db
 from . import BaseMinin
 
-class Test(BaseMinin):
+class Test(BaseMinin, db.Model):
     __tablename__ = 'tests'
 
     id = db.Column(db.Integer, primary_key=True)

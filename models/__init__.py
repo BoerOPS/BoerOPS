@@ -1,6 +1,6 @@
 from app import db
 
-class BaseMinin(db.Model):
+class BaseMinin:
     @classmethod
     def create(cls, **kwargs):
         recode = cls(**kwargs)
