@@ -63,7 +63,7 @@ Vue.prototype.$https = axios;
 ```
 ## less/sass/...
 - 如果需要以上`css`预处理语言，请自行安装对应依赖
-- 如果按照·sass·相关依赖失败，请参考[安装node-sass的正确姿势](https://github.com/lmk123/blog/issues/28)
+- 如果安装`sass`相关依赖失败，请参考[安装node-sass的正确姿势](https://github.com/lmk123/blog/issues/28)
 
 ## Tips
 - 慎用`style`标签上的`scoped`属性: 在某些情况下会导致你无法修改三方组件的样式
