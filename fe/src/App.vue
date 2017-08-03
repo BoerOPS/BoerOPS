@@ -1,16 +1,14 @@
 <template>
   <div id="app">
-    <router-link to="/hello">To Hello</router-link>
     <router-view></router-view>
   </div>
 </template>
 
 <script>
-  import axios from 'axios';
   export default {
     name: 'app',
     mounted: function () {
-      axios.get('/user/1')
+      this.$https.get('/user/1')
         .then(function (response) {
           console.log(response);
         })
