@@ -50,5 +50,17 @@ npm run build --report
     └── ./src/App.vue
 ```
 ## 代理配置说明
-> 最开始采用vue-cli的默认写法配置proxyTbale但是发现配置之后，每次run dev之后都无法正常打开连接，需要手动更正一遍地址。
-所以后来自己在build/dev-server.js里面自己重新写了个配置。But...配置之后发现无法热刷新...醉，先暂时这么用着。
+> 最开始采用`vue-cli`的默认写法配置`proxyTbale`但是发现配置之后，每次`run dev`之后都无法正常打开连接，需要手动更正一遍地址。
+所以后来自己在`build/dev-server.js`里面自己重新写了个配置。`But`...配置之后发现无法热刷新...醉，先暂时这么用着。
+
+## axios
+> 全局注册到了`vue`原型链上,后期考虑是否对其进行类`jq`的`ajax`封装，以减少学习成本
+```javascript
+import Vue from 'vue'
+import axios from 'axios'
+
+Vue.prototype.$https = axios;
+```
+
+## Tips
+- 慎用`style`标签上的`scoped`属性: 在某些情况下会导致你无法修改三方组件的样式

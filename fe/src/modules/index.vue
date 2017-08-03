@@ -1,5 +1,8 @@
 <template>
-  <p>{{msg}}</p>
+  <div class="index">
+    <el-button type="primary"><router-link to="/test">To Test</router-link></el-button>
+    <p>{{msg}}</p>
+  </div>
 </template>
 
 <script>

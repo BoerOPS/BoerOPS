@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <el-button type="primary"><router-link to="/test">To Test</router-link></el-button>
     <router-view></router-view>
   </div>
 </template>
