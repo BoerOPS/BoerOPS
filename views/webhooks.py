@@ -27,3 +27,10 @@ def push_hook():
     print(user_name)
     print(commits)
     return ''
+
+from models.tests import Test
+
+@bp.route('/orm_test')
+def orm_test(name):
+    Test.create(name=name)
+    return 'done'
