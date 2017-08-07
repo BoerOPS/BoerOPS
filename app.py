@@ -10,7 +10,7 @@ from config import config
 
 db = SQLAlchemy()
 mail = Mail()
-# redis = redis.Redis(host='127.0.0.1', port=6379, db=0)
+redis = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
 def create_app(config_name):
     app = Flask(__name__)

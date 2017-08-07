@@ -2,6 +2,8 @@ from flask import Blueprint, redirect, request, jsonify
 from flask_restful import Api, Resource, url_for
 import requests
 
+from app import redis
+
 bp = Blueprint('user', __name__)
 api = Api(bp)
 
@@ -24,8 +26,16 @@ def oauth2_welcome():
         'redirect_uri': redirect_uri
     }
     url = 'http://gitlab.onenet.com/oauth/token'
-    r = requests.post(url, params=parameters)
-    return jsonify(r.json())
+    resp = requests.post(url, params=parameters)
+    resp = resp.json()
+    access_token = resp.get('access_token')
+    token_type = resp.get('token_type')
+    expires_in = resp.get('expires_in') - 60
+    refresh_token = resp.get('refresh_token')
+    redis.set('access_token', access_token, ex=expires_in)
+    redis.set('token_type', token_type, ex=expires_in)
+    redis.set('refresh_token', refresh_token, ex=expires_in)
+    return resp
 
 
 @bp.route('/auth/login')
@@ -34,6 +44,14 @@ def auth_login():
     state = 'gitlab'
     url = 'http://gitlab.onenet.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&state=%s' % (client_id, redirect_uri, state)
     return redirect(url)
+
+
+@bp.route('/user/token')
+def get_user_token():
+    access_token = redis.get('access_token')
+    if access_token is None:
+        return redirect('/auth/login')
+    return 'access_token: %s' % access_token
 
 
 class User(Resource):
