@@ -29,13 +29,15 @@ def oauth2_welcome():
     resp = requests.post(url, params=parameters)
     resp = resp.json()
     access_token = resp.get('access_token')
-    token_type = resp.get('token_type')
-    expires_in = resp.get('expires_in') - 60
+    created_at = resp.get('expires_in')
     refresh_token = resp.get('refresh_token')
-    redis.set('access_token', access_token, ex=expires_in)
-    redis.set('token_type', token_type, ex=expires_in)
-    redis.set('refresh_token', refresh_token, ex=expires_in)
-    return resp
+    scope = resp.get('scope')
+    token_type = resp.get('token_type')
+    redis.set('access_token', access_token)
+    redis.set('refresh_token', refresh_token)
+    redis.set('scope', scope)
+    redis.set('token_type', token_type)
+    return jsonify(resp)
 
 
 @bp.route('/auth/login')
@@ -51,6 +53,10 @@ def get_user_token():
     access_token = redis.get('access_token')
     if access_token is None:
         return redirect('/auth/login')
+    # import gitlab
+    # gl = gitlab.Gitlab('http://gitlab.onenet.com', access_token)
+    
+    # print(gl.projects.get(32))
     return 'access_token: %s' % access_token
 
 
