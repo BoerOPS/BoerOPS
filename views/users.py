@@ -53,11 +53,12 @@ def get_user_token():
     access_token = redis.get('access_token')
     if access_token is None:
         return redirect('/auth/login')
-    # import gitlab
-    # gl = gitlab.Gitlab('http://gitlab.onenet.com', access_token)
+    import gitlab
+    gl = gitlab.Gitlab('http://gitlab.onenet.com', oauth_token=access_token, api_version='4')
     
-    # print(gl.projects.get(32))
-    return 'access_token: %s' % access_token
+    project = gl.projects.get(8)
+    # return 'access_token: %s' % access_token
+    return project.name
 
 
 class User(Resource):
