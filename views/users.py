@@ -7,7 +7,6 @@ from app import redis
 bp = Blueprint('user', __name__)
 api = Api(bp)
 
-
 client_id = '8d3b6063c3810d8ba1698d44c96454a767232f33a8e6fa23110905310ec4d768'
 secert = '381e4e76b806ddad32f51c238386d1a0ba80fa211b48bf542c6a101cbf44a48f'
 redirect_uri = 'http://webhook.mail.heclouds.com/oauth2/welcome'
@@ -37,32 +36,43 @@ def oauth2_welcome():
     redis.set('refresh_token', refresh_token)
     redis.set('scope', scope)
     redis.set('token_type', token_type)
-    return jsonify(resp)
+    return redirect('/user/token')
 
 
 @bp.route('/auth/login')
 def auth_login():
     # https://gitlab.example.com/oauth/authorize?client_id=APP_ID&redirect_uri=REDIRECT_URI&response_type=code&state=YOUR_UNIQUE_STATE_HASH
     state = 'gitlab'
-    url = 'http://gitlab.onenet.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&state=%s' % (client_id, redirect_uri, state)
+    url = 'http://gitlab.onenet.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=code&state=%s' % (
+        client_id, redirect_uri, state)
     return redirect(url)
 
 
 @bp.route('/user/token')
 def get_user_token():
-    access_token = redis.get('access_token')
+    access_token = redis.get('access_token').decode('utf-8')
     if access_token is None:
         return redirect('/auth/login')
     import gitlab
-    gl = gitlab.Gitlab('http://gitlab.onenet.com', oauth_token=access_token, api_version='4')
-    
-    project = gl.projects.get(8)
-    # return 'access_token: %s' % access_token
-    return project.name
+    gl = gitlab.Gitlab(
+        'http://gitlab.onenet.com', oauth_token=access_token, api_version='4')
+    project = gl.projects.get(29)
+    commits = project.commits.list()
+    projects = gl.projects.list(all=True)
+    branches = project.branches.list()
+    users = gl.users.list(all=True)
+    return jsonify(
+        name=project.name,
+        branches=', '.join([b.name for b in branches]),
+        projects=', '.join([p.name for p in projects]),
+        total_projects=len(projects),
+        users=', '.join([u.username for u in users]),
+        total_users=len(users))
 
 
 class User(Resource):
     def get(self, id):
         return {'task': 'done'}
+
 
 api.add_resource(User, '/user/<int:id>')

@@ -59,7 +59,7 @@ class Gitlab(object):
     Args:
         url (str): The URL of the GitLab server.
         private_token (str): The user private token
-        OAuth2 tokens (str): 
+        oauth_token (str): The user OAuth2 tokens
         email (str): The user email or login.
         password (str): The user password (associated with email).
         ssl_verify (bool): Whether SSL certificates should be validated.
