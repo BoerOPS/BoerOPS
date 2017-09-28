@@ -1,5 +1,10 @@
 <template>
-  <p>{{msg}}</p>
+  <div name="hello">
+    <p>{{msg}}</p>
+    <router-link to="/home">
+      <el-button type="primary">Home</el-button>
+    </router-link>
+  </div>
 </template>
 
 <script>
@@ -7,7 +12,7 @@ export default {
   name: 'hello',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: '这是Hello页面'
     }
   }
 }

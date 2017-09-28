@@ -1,7 +1,7 @@
 from app import db
-from . import BaseMinin
+from . import Base
 
-class Commit(BaseMinin, db.Model):
+class Commit(Base, db.Model):
     __tablename__ = 'commits'
 
     id = db.Column(db.Integer, primary_key=True)
