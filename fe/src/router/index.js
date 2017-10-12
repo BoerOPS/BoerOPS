@@ -10,20 +10,23 @@ export default new Router({
   routes: [
     {
       path: '/',
-      redirect: '/login'
+      redirect: '/home'
     },
     {
       path: '/login',
+      iconCls: 'fa fa-id-card-o',
       name: 'Login',
       component: Login
     },
     {
       path: '/hello',
+      iconCls: 'fa fa-id-card-o',
       name: 'Hello',
       component: Hello
     },
     {
       path: '/home',
+      iconCls: 'fa fa-id-card-o',
       name: 'Home',
       component: Home
     }

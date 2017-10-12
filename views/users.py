@@ -68,7 +68,8 @@ def auth_login():
 @bp.route('/user/token')
 def get_user_token():
     if session.get('access_token') is None:
-        print('-------------MMM>>>>>>>')
+        if session.get('refresh_token') is None:
+            return redirect('/auth/login')
         return redirect('/oauth2/welcome')
     import gitlab
     gl = gitlab.Gitlab(

@@ -3,9 +3,9 @@ venv
 *.pyc
 *.log
 static
+!fe/static
 templates
 */node_modules
 .history
 .vscode
 .project
-
