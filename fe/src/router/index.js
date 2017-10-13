@@ -10,7 +10,9 @@ export default new Router({
   routes: [
     {
       path: '/',
-      redirect: '/home'
+      iconCls: 'fa fa-id-card-o',
+      name: 'Home',
+      component: Home
     },
     {
       path: '/login',
@@ -23,12 +25,6 @@ export default new Router({
       iconCls: 'fa fa-id-card-o',
       name: 'Hello',
       component: Hello
-    },
-    {
-      path: '/home',
-      iconCls: 'fa fa-id-card-o',
-      name: 'Home',
-      component: Home
     }
   ]
 })

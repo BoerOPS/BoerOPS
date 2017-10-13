@@ -87,6 +87,7 @@ def get_user_token():
             gitlab_email=current_user.email,
             gitlab_avatar=current_user.avatar_url)
     login_user(_user)
+    return redirect('/')
     # project = gl.projects.get(29)
     # commits = project.commits.list()
     # projects = gl.projects.list(all=True)
@@ -108,8 +109,11 @@ def get_user_token():
         email=current_user.email,
         avatar=current_user.avatar_url)
 
+@bp.route('/user/login')
+def login():
+    return '<h3><a href="/user/token">Gitlab Login</a></h3>'
 
-@bp.route('/auth/logout')
+@bp.route('/user/logout')
 def logout():
     logout_user()
     session.pop('access_token')

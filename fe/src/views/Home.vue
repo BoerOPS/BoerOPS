@@ -107,7 +107,7 @@ export default {
       //console.log('handleopen');
     },
     handleclose() {
-      //console.log('handleclose');
+      console.log('handleclose');
     },
     handleselect: function (a, b) {
     },

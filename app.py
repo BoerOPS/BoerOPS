@@ -11,7 +11,7 @@ from config import config
 
 db = SQLAlchemy()
 lm = LoginManager()
-lm.login_view = '/user/token'
+lm.login_view = '/user/login'
 mail = Mail()
 pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 redis = redis.Redis(connection_pool=pool)
