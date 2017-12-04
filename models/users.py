@@ -1,7 +1,10 @@
 from app import db
 from . import Base
 
+from flask import current_app
 from flask_login import UserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+
 
 class User(Base, db.Model, UserMixin):
     __tablename__ = 'users'
@@ -23,5 +26,27 @@ class User(Base, db.Model, UserMixin):
     # user_username = db.Column(db.String(16))
     # user_name = db.Column(db.String(16))
     # user_email = db.Column(db.String(64))
-    create_at = db.Column(db.DateTime, default=db.func.now())
-    update_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+    def generate_auth_token(self, expires):
+        s = Serializer(
+            current_app.config['SECRET_KEY'],
+            expires_in=expires,
+            salt=current_app.config['SALT'])
+        return s.dumps({'uid': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(
+            current_app.config['SECRET_KEY'],
+            salt=current_app.config['SALT'])
+        try:
+            data = s.loads(token)
+        except:
+            return None
+        return User.query.get(data['id'])
+
+    def __repr__(self):
+        return '<User %r>' % self.username

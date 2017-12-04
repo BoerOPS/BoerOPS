@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, request, jsonify, session
+from flask import Blueprint, redirect, request, jsonify, make_response, current_app
 from flask_login import login_user, logout_user
 from flask_restful import Api, Resource, url_for
 import requests
@@ -31,29 +31,32 @@ def oauth2_welcome():
         print('----------> refresh token')
         parameters = {
             'grant_type': 'refresh_token',
-            'refresh_token': session['refresh_token'],
-            'scope': session['scope']
+            'refresh_token': request.cookies['refresh_token'],
+            'scope': request.cookies['scope']
         }
     url = 'http://gitlab.onenet.com/oauth/token'
-    resp = requests.post(url, params=parameters)
+    resp = requests.post(url, data=parameters)
     resp = resp.json()
     access_token = resp.get('access_token')
-    created_at = resp.get('expires_in')
+    created_at = resp.get('created_at')
     refresh_token = resp.get('refresh_token')
     scope = resp.get('scope')
     token_type = resp.get('token_type')
-    # redis.set('access_token', access_token, ex=7000)
-    # redis.set('refresh_token', refresh_token)
-    # redis.set('scope', scope)
-    # redis.set('token_type', token_type)
-    session['access_token'] = access_token
-    session['refresh_token'] = refresh_token
-    session['created_at'] = created_at
-    session['scope'] = scope
-    session['token_type'] = token_type
-    print(resp)
     # return jsonify(resp)
-    return redirect('/user/token')
+    # response = make_response(redirect('/user/token'))
+    # response.set_cookie('access_token', access_token)
+    # response.set_cookie('refresh_token', refresh_token)
+    # response.set_cookie('created_at', str(created_at))
+    # response.set_cookie('scope', scope)
+    # response.set_cookie('token_type', token_type)
+    # return response
+    return jsonify({
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'created_at': created_at,
+        'scope': scope,
+        'token_type': token_type
+    })
 
 
 @bp.route('/auth/login')
@@ -67,14 +70,15 @@ def auth_login():
 
 @bp.route('/user/token')
 def get_user_token():
-    if session.get('access_token') is None:
-        if session.get('refresh_token') is None:
+    print('-----request.cookies------->', request.cookies)
+    if not request.cookies.get('access_token'):
+        if not request.cookies.get('refresh_token'):
             return redirect('/auth/login')
         return redirect('/oauth2/welcome')
     import gitlab
     gl = gitlab.Gitlab(
         'http://gitlab.onenet.com',
-        oauth_token=session.get('access_token'),
+        oauth_token=request.cookies.get('access_token'),
         api_version='4')
     gl.auth()
     current_user = gl.user
@@ -86,8 +90,12 @@ def get_user_token():
             gitlab_name=current_user.name,
             gitlab_email=current_user.email,
             gitlab_avatar=current_user.avatar_url)
-    login_user(_user)
-    return redirect('/')
+    g.current_user = _user
+    # login_user(_user)
+    resp = make_response(redirect('/'))
+    print('--<<<token', g.current_user.generate_auth_token(expires=3600))
+    resp.set_cookie('token', g.current_user.generate_auth_token(expires=3600))
+    return resp
     # project = gl.projects.get(29)
     # commits = project.commits.list()
     # projects = gl.projects.list(all=True)
@@ -115,10 +123,40 @@ def login():
 
 @bp.route('/user/logout')
 def logout():
-    logout_user()
-    session.pop('access_token')
-    return redirect('/')
+    # logout_user()
+    resp = make_response(redirect('/'))
+    resp.set_cookie('access_token', '')
+    resp.set_cookie('token', '')
+    return resp
 
+
+from flask import g
+@bp.route('/test')
+def test_global_g():
+    return str(g.current_user.id)
+
+
+@bp.route('/test2')
+def test2():
+    return redirect('/test3')
+
+
+@bp.route('/test3')
+def test3():
+    return jsonify({'uid': 24})
+
+
+# @bp.before_app_request
+def before_app_request():
+    if request.path in ['/user/login', '/user/token', '/auth/login']:
+        return
+    token = request.cookies.get('token')
+    if not token:
+        return redirect('/user/login')
+    print('before request---->token', token)
+    g.current_user = User.verify_auth_token(token)
+    if g.current_user is None:
+        return jsonify('token error')
 
 # class User(Resource):
 #     def get(self, id):

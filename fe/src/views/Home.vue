@@ -61,10 +61,10 @@
       <section class="content-container">
         <div class="grid-content bg-purple-light">
           <el-col :span="24" class="breadcrumb-container">
-            <strong class="title">{{$route.name}}</strong>
+            <!-- <strong class="title">{{$route.name}}</strong> -->
             <el-breadcrumb separator="/" class="breadcrumb-inner">
               <el-breadcrumb-item v-for="item in $route.matched" :key="item.path">
-                {{ item.name }}
+                <a href="">{{ item.name }}</a>
               </el-breadcrumb-item>
             </el-breadcrumb>
           </el-col>
