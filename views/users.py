@@ -1,10 +1,26 @@
-from flask import Blueprint, redirect, request, jsonify, make_response, current_app
+from flask import Blueprint, redirect, request, jsonify, make_response, current_app, g
 from flask_login import login_user, logout_user
 from flask_restful import Api, Resource, url_for
 import requests
+import gitlab
 
 from app import redis
 from models.users import User
+
+from functools import wraps
+from urllib.parse import urlencode
+
+
+# @bp.before_app_request
+def allow_cross_domain(f):
+    @wraps(f)
+    def set_resp_headers(*args, **kwargs):
+        resp = make_response(f(*args, **kwargs))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
+
+    return set_resp_headers
+
 
 bp = Blueprint('user', __name__)
 api = Api(bp)
@@ -15,10 +31,12 @@ redirect_uri = 'http://webhook.mail.heclouds.com/oauth2/welcome'
 
 
 @bp.route('/oauth2/welcome')
+@allow_cross_domain
 def oauth2_welcome():
     code = request.args.get('code')
     # parameters = 'client_id=APP_ID&client_secret=APP_SECRET&code=RETURNED_CODE&grant_type=authorization_code&redirect_uri=REDIRECT_URI'
     # RestClient.post 'http://gitlab.example.com/oauth/token', parameters
+    # access token parameters
     parameters = {
         'client_id': client_id,
         'client_secret': secert,
@@ -26,40 +44,66 @@ def oauth2_welcome():
         'grant_type': 'authorization_code',
         'redirect_uri': redirect_uri
     }
-    # refresh token
+    # refresh token parameters
     if code is None:
-        print('----------> refresh token')
         parameters = {
             'grant_type': 'refresh_token',
-            'refresh_token': request.cookies['refresh_token'],
-            'scope': request.cookies['scope']
+            'refresh_token': request.args.get('refresh_token'),
+            'scope': request.args.get('scope')
         }
     url = 'http://gitlab.onenet.com/oauth/token'
     resp = requests.post(url, data=parameters)
     resp = resp.json()
+    print('--resp-->', resp)
     access_token = resp.get('access_token')
     created_at = resp.get('created_at')
     refresh_token = resp.get('refresh_token')
     scope = resp.get('scope')
     token_type = resp.get('token_type')
-    # return jsonify(resp)
-    # response = make_response(redirect('/user/token'))
-    # response.set_cookie('access_token', access_token)
-    # response.set_cookie('refresh_token', refresh_token)
-    # response.set_cookie('created_at', str(created_at))
-    # response.set_cookie('scope', scope)
-    # response.set_cookie('token_type', token_type)
-    # return response
-    return jsonify({
+    print('--access_token-->', access_token)
+    # 入库操作
+    if access_token:
+        gl = gitlab.Gitlab(
+            'http://gitlab.onenet.com',
+            oauth_token=access_token,
+            api_version='4')
+        gl.auth()
+        u = User.query.filter_by(gitlab_id=gl.user.id).first()
+        if u is None:
+            u = User.create(
+                gitlab_id=gl.user.id,
+                gitlab_username=gl.user.username,
+                gitlab_name=gl.user.name,
+                gitlab_email=gl.user.email,
+                gitlab_avatar=gl.user.avatar_url)
+    else:
+        return jsonify(resp)
+        # {
+        #     'error': 'invalid_grant',
+        #     'error_description': 'The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.'
+        # }
+    # refresh token return
+    if code is None:
+        return jsonify({
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'created_at': created_at,
+            'scope': scope,
+            'token_type': token_type
+        })
+    # access token return
+    querystring = urlencode({
         'access_token': access_token,
         'refresh_token': refresh_token,
         'created_at': created_at,
         'scope': scope,
         'token_type': token_type
     })
+    return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
 
 
 @bp.route('/auth/login')
+@allow_cross_domain
 def auth_login():
     # https://gitlab.example.com/oauth/authorize?client_id=APP_ID&redirect_uri=REDIRECT_URI&response_type=code&state=YOUR_UNIQUE_STATE_HASH
     state = 'gitlab'
@@ -117,9 +161,11 @@ def get_user_token():
         email=current_user.email,
         avatar=current_user.avatar_url)
 
+
 @bp.route('/user/login')
 def login():
     return '<h3><a href="/user/token">Gitlab Login</a></h3>'
+
 
 @bp.route('/user/logout')
 def logout():
@@ -130,18 +176,21 @@ def logout():
     return resp
 
 
-from flask import g
 @bp.route('/test')
 def test_global_g():
     return str(g.current_user.id)
 
 
+# webhook
 @bp.route('/test2')
+# @allow_cross_domain
 def test2():
     return redirect('/test3')
 
 
+# gitlab
 @bp.route('/test3')
+@allow_cross_domain
 def test3():
     return jsonify({'uid': 24})
 
@@ -157,6 +206,17 @@ def before_app_request():
     g.current_user = User.verify_auth_token(token)
     if g.current_user is None:
         return jsonify('token error')
+
+
+# from flask import g
+
+# def add_resp_headers(f):
+#     if not hasattr(g, 'request_callbacks'):
+#         g.request_callbacks = []
+#     g.request_callbacks.append(f)
+#     return f
+
+# return resp
 
 # class User(Resource):
 #     def get(self, id):
