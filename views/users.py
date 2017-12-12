@@ -181,6 +181,18 @@ def test_global_g():
     return str(g.current_user.id)
 
 
+@bp.route('/test1', methods=['POST'])
+def test1():
+    print('---args--->', request.args.get('id'))
+    print('--->', request.form.getlist('id'))
+    print('--->', request.values)
+    # import json
+    # ids = json.loads(request.args.get('id'))
+    # for id in ids:
+    #     print('<--Delete done.-->', id)
+
+    return jsonify('ok!')
+
 # webhook
 @bp.route('/test2')
 # @allow_cross_domain
