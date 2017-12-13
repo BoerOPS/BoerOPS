@@ -1,10 +1,10 @@
 from flask import Blueprint, redirect, request, jsonify, make_response, current_app, g
-from flask_login import login_user, logout_user
+# from flask_login import login_user, logout_user
 from flask_restful import Api, Resource, url_for
 import requests
 import gitlab
 
-from app import redis
+# from app import redis
 from models.users import User
 
 from functools import wraps

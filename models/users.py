@@ -2,11 +2,12 @@ from app import db
 from . import Base
 
 from flask import current_app
-from flask_login import UserMixin
+# from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 
-class User(Base, db.Model, UserMixin):
+# class User(Base, db.Model, UserMixin):
+class User(Base, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
