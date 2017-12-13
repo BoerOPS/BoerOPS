@@ -99,7 +99,8 @@ def oauth2_welcome():
         'scope': scope,
         'token_type': token_type
     })
-    return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
+    # return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
+    return redirect('http://127.0.0.1:8080/#/login?' + querystring)
 
 
 @bp.route('/auth/login')
@@ -140,20 +141,6 @@ def get_user_token():
     print('--<<<token', g.current_user.generate_auth_token(expires=3600))
     resp.set_cookie('token', g.current_user.generate_auth_token(expires=3600))
     return resp
-    # project = gl.projects.get(29)
-    # commits = project.commits.list()
-    # projects = gl.projects.list(all=True)
-    # branches = project.branches.list()
-    # users = gl.users.list(all=True)
-    # return jsonify(
-    #     name=name or project.name,
-    #     branches=', '.join([b.name for b in branches]),
-    #     projects=', '.join([p.name for p in projects]),
-    #     total_projects=len(projects),
-    #     users=', '.join([u.username for u in users]),
-    #     total_users=len(users),
-    #     whoami=current_user.name)
-    # return redirect('/')
     return jsonify(
         id=current_user.id,
         username=current_user.username,
@@ -181,6 +168,18 @@ def test_global_g():
     return str(g.current_user.id)
 
 
+@bp.route('/test1', methods=['POST'])
+def test1():
+    print('---args--->', request.args.get('id'))
+    print('--->', request.form.getlist('id'))
+    print('--->', request.values)
+    # import json
+    # ids = json.loads(request.args.get('id'))
+    # for id in ids:
+    #     print('<--Delete done.-->', id)
+
+    return jsonify('ok!')
+
 # webhook
 @bp.route('/test2')
 # @allow_cross_domain
@@ -195,18 +194,18 @@ def test3():
     return jsonify({'uid': 24})
 
 
-# @bp.before_app_request
-def before_app_request():
-    if request.path in ['/user/login', '/user/token', '/auth/login']:
+@bp.before_app_request
+def before_pre_request():
+    if request.path in [
+            '/user/login', '/user/token', '/auth/login', '/oauth2/welcome'
+    ]:
         return
-    token = request.cookies.get('token')
+    token = request.headers.get('TOKEN')
     if not token:
-        return redirect('/user/login')
-    print('before request---->token', token)
-    g.current_user = User.verify_auth_token(token)
-    if g.current_user is None:
-        return jsonify('token error')
-
+        return jsonify('Authorization error'), 403
+    gl = gitlab.Gitlab(
+        'http://gitlab.onenet.com', oauth_token=token, api_version='4')
+    g.gl = gl
 
 # from flask import g
 
