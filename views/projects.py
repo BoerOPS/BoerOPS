@@ -85,10 +85,25 @@ class BranchList(Resource):
     def get(self):
         project_id = request.args.get('project_id')
         project = Project.abort_if_project_doesnt_exist(project_id)
-        return [b.get_id() for b in project.branches.list()]
+        return [b.get_id() for b in project.branches.list(all=True)]
 
+class CommitList(Resource):
+    def get(self):
+        project_id = request.args.get('project_id')
+        project = Project.abort_if_project_doesnt_exist(project_id)
+        res = []
+        for branch in [b.get_id() for b in project.branches.list(all=True)]:
+            pre_brach_commites = {}
+            pre_brach_commites['value'] = branch
+            pre_brach_commites['label'] = branch
+            commits = project.commits.list(ref_name=branch)
+            pre_brach_commites['children'] = [{'value': c.attributes['id'], 'label': c.attributes['author_name'] + ' @ '+ c.attributes['message'] + ' @ ' + c.attributes['committed_date']} for c in commits]
+            res.append(pre_brach_commites)
+        # res = [{'author': c.attributes['author_name'], 'id': c.attributes['id'], 'message': c.attributes['message'], 'committed_date': c.attributes['committed_date']} for c in commits]
+        return res
 
 api.add_resource(Project, '/projects/<int:id>', endpoint='project')
 api.add_resource(ProjectList, '/projects', endpoint='projects')
 api.add_resource(Branch, '/branches/<string:id>', endpoint='branch')
 api.add_resource(BranchList, '/branches', endpoint='branches')
+api.add_resource(CommitList, '/commites', endpoint='commites')
