@@ -7,11 +7,14 @@ import gitlab
 bp = Blueprint('project', __name__)
 api = Api(bp)
 
+
 @bp.route('/')
 def test_for_vue():
     return render_template('index.html')
 
+
 parser = reqparse.RequestParser()
+
 
 class Project(Resource):
     def get(self, id):
@@ -42,7 +45,8 @@ class ProjectList(Resource):
         offset = request.args.get('offset')
         limit = request.args.get('limit')
         # projects = Project.query.limit(10).offset(10)
-        projects = g.gl.projects.list(all=True)
+        # https://gitlab.com/help/api/projects.md
+        projects = g.gl.projects.list(membership=True)
         res = {}
         res['projects'] = [{
             'id': p.id,
@@ -80,12 +84,12 @@ class Branch(Resource):
             return '已解锁'
 
 
-
 class BranchList(Resource):
     def get(self):
         project_id = request.args.get('project_id')
         project = Project.abort_if_project_doesnt_exist(project_id)
         return [b.get_id() for b in project.branches.list(all=True)]
+
 
 class CommitList(Resource):
     def get(self):
@@ -97,10 +101,17 @@ class CommitList(Resource):
             pre_brach_commites['value'] = branch
             pre_brach_commites['label'] = branch
             commits = project.commits.list(ref_name=branch)
-            pre_brach_commites['children'] = [{'value': c.attributes['id'], 'label': c.attributes['author_name'] + ' @ '+ c.attributes['message'] + ' @ ' + c.attributes['committed_date']} for c in commits]
+            pre_brach_commites['children'] = [{
+                'value':
+                c.attributes['id'],
+                'label':
+                c.attributes['author_name'] + ' $ ' + c.attributes['message'] +
+                ' @ ' + c.attributes['short_id']
+            } for c in commits]
             res.append(pre_brach_commites)
         # res = [{'author': c.attributes['author_name'], 'id': c.attributes['id'], 'message': c.attributes['message'], 'committed_date': c.attributes['committed_date']} for c in commits]
         return res
+
 
 api.add_resource(Project, '/projects/<int:id>', endpoint='project')
 api.add_resource(ProjectList, '/projects', endpoint='projects')

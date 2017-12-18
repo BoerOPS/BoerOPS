@@ -68,7 +68,7 @@ def oauth2_welcome():
             oauth_token=access_token,
             api_version='4')
         gl.auth()
-        u = User.query.filter_by(gitlab_id=gl.user.id).first()
+        u = User.first(gitlab_id=gl.user.id)
         if u is None:
             u = User.create(
                 gitlab_id=gl.user.id,
@@ -99,8 +99,8 @@ def oauth2_welcome():
         'scope': scope,
         'token_type': token_type
     })
-    # return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
-    return redirect('http://127.0.0.1:8080/#/login?' + querystring)
+    return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
+    # return redirect('http://127.0.0.1:8080/#/login?' + querystring)
 
 
 @bp.route('/auth/login')
@@ -174,6 +174,8 @@ def before_pre_request():
         return jsonify('Authorization error'), 403
     gl = gitlab.Gitlab(
         'http://gitlab.onenet.com', oauth_token=token, api_version='4')
+    gl.auth()
+    g.current_user = gl.user
     g.gl = gl
 
 # from flask import g
@@ -186,8 +188,9 @@ def before_pre_request():
 
 # return resp
 
-# class User(Resource):
-#     def get(self, id):
-#         return {'task': 'done'}
+class GetCurrentUser(Resource):
+    def get(self):
+        return g.current_user.attributes
 
-# api.add_resource(User, '/user/<int:id>')
+
+api.add_resource(GetCurrentUser, '/getcurrentuser', endpoint='getcurrentuser')
