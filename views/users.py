@@ -188,9 +188,9 @@ def before_pre_request():
 
 # return resp
 
-class GetCurrentUser(Resource):
+class CurrentUser(Resource):
     def get(self):
         return g.current_user.attributes
 
 
-api.add_resource(GetCurrentUser, '/getcurrentuser', endpoint='getcurrentuser')
+api.add_resource(CurrentUser, '/currentuser', endpoint='currentuser')

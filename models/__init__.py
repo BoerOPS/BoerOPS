@@ -1,7 +1,7 @@
 from app import db
 
-class Base:
 
+class Base:
     @classmethod
     def save(cls, record):
         db.session.add(record)
@@ -18,6 +18,8 @@ class Base:
 
     @classmethod
     def get(cls, id):
+        # http://docs.sqlalchemy.org/en/latest/orm/session_api.html#sqlalchemy.orm.session.Session.expire_all
+        db.session.expire_all()
         return cls.query.get(id)
 
     @classmethod
@@ -50,12 +52,20 @@ class Base:
     def update(cls, record, **kwargs):
         for k, v in kwargs.items():
             setattr(record, k, v)
-        cls.save(record)
+        db.session.commit()
         return record
 
     @classmethod
-    def session_commit(cls):
+    def delete(cls, record, **kwargs):
+        "It's danger"
+        db.session.delete(record)
         db.session.commit()
 
     def __del__(self):
         db.session.close()
+
+
+class TimestampMixin:
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime, default=db.func.now(), onupdate=db.func.now())

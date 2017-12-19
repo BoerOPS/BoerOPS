@@ -1,7 +1,8 @@
 from app import db
-from . import Base
+from . import Base, TimestampMixin
 
-class Commit(Base, db.Model):
+
+class Commit(db.Model, Base, TimestampMixin):
     __tablename__ = 'commits'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -16,5 +17,3 @@ class Commit(Base, db.Model):
     user_username = db.Column(db.String(16))
     user_name = db.Column(db.String(16))
     user_email = db.Column(db.String(64))
-    create_at = db.Column(db.DateTime, default=db.func.now())
-    update_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())

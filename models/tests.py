@@ -1,10 +1,9 @@
 from app import db
-from . import Base
+from . import Base, TimestampMixin
 
-class Test(Base, db.Model):
+
+class Test(db.Model, Base, TimestampMixin):
     __tablename__ = 'tests'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32))
-    create_at = db.Column(db.DateTime, default=db.func.now())
-    update_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())

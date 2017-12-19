@@ -1,13 +1,11 @@
 from app import db
-from . import Base
+from . import Base, TimestampMixin
 
 from flask import current_app
-# from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 
-# class User(Base, db.Model, UserMixin):
-class User(Base, db.Model):
+class User(db.Model, Base, TimestampMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -27,9 +25,6 @@ class User(Base, db.Model):
     # user_username = db.Column(db.String(16))
     # user_name = db.Column(db.String(16))
     # user_email = db.Column(db.String(64))
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    updated_at = db.Column(
-        db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     def generate_auth_token(self, expires):
         s = Serializer(

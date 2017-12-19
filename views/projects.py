@@ -3,6 +3,8 @@ from flask import Blueprint, render_template, request, jsonify, g
 from flask_restful import Api, Resource, abort, reqparse
 
 import gitlab
+from models.projects import Project as ProjectModel
+from models.hosts import Host as HostModel
 
 bp = Blueprint('project', __name__)
 api = Api(bp)
@@ -60,9 +62,25 @@ class ProjectList(Resource):
         return res
 
     def post(self):
-        parser.add_argument('id', help='ID require int')
+        parser.add_argument('name', help='required')
+        parser.add_argument('beforeChk', help='required')
+        parser.add_argument('afterChk', help='required')
+        parser.add_argument('beforeDpy', help='required')
+        parser.add_argument('afterDpy', help='required')
+        parser.add_argument('hosts', help='required')
+        parser.add_argument('project_id', help='required')
         args = parser.parse_args()
-        return args['id']
+        _project = ProjectModel.create(
+            name=args['name'],
+            before_checkout=args['beforeChk'],
+            after_checkout=args['afterChk'],
+            before_deploy=args['beforeDpy'],
+            after_deploy=args['afterDpy'],
+            project_id=args['project_id'])
+        for h in args['hosts']:
+            _project.hosts.append(HostModel.first(ip_addr=h))
+        ProjectModel.save(_project)
+        return '新建成功'
 
 
 class Branch(Resource):

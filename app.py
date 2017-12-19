@@ -13,8 +13,10 @@ db = SQLAlchemy()
 # lm = LoginManager()
 # lm.login_view = '/user/login'
 mail = Mail()
+
 # pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 # redis = redis.Redis(connection_pool=pool)
+
 
 def create_app(config_name):
     app = Flask(__name__)
@@ -29,10 +31,12 @@ def create_app(config_name):
     from views.projects import bp as project_bp
     from views.users import bp as user_bp
     from views.webhooks import bp as webhook_bp
+    from views.hosts import bp as host_bp
     app.register_blueprint(deploy_bp)
     app.register_blueprint(project_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(webhook_bp)
+    app.register_blueprint(host_bp)
 
     return app
 
