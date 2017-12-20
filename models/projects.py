@@ -1,6 +1,26 @@
 from app import db
 from . import Base, TimestampMixin
-from .rel_project_host import RelProjectHost
+
+rel_project_host = db.Table('rel_project_host',
+                            db.Column(
+                                'project_id',
+                                db.Integer,
+                                db.ForeignKey('projects.id'),
+                                primary_key=True),
+                            db.Column(
+                                'host_id',
+                                db.Integer,
+                                db.ForeignKey('hosts.id'),
+                                primary_key=True),
+                            db.Column(
+                                'created_at',
+                                db.DateTime,
+                                default=db.func.now()),
+                            db.Column(
+                                'updated_at',
+                                db.DateTime,
+                                default=db.func.now(),
+                                onupdate=db.func.now()))
 
 
 class Project(db.Model, Base, TimestampMixin):
@@ -12,10 +32,9 @@ class Project(db.Model, Base, TimestampMixin):
     after_checkout = db.Column(db.Text)
     before_deploy = db.Column(db.Text)
     after_deploy = db.Column(db.Text)
-    host_id = db.Column(db.Integer)
     project_id = db.Column(db.Integer)
 
     hosts = db.relationship(
-        "Host",
-        secondary=RelProjectHost,
-        backref=db.backref("projects", lazy="dynamic"))
+        'Host',
+        secondary=rel_project_host,
+        backref=db.backref('projects', lazy='dynamic'))

@@ -44,6 +44,10 @@ class Project(Resource):
 
 class ProjectList(Resource):
     def get(self):
+        ops = request.args.get('ops')
+        if ops is not None:
+            _projects = ProjectModel.all()
+            return [{'project_id': p.project_id, 'name': p.name} for p in _projects]
         offset = request.args.get('offset')
         limit = request.args.get('limit')
         # projects = Project.query.limit(10).offset(10)
@@ -67,19 +71,21 @@ class ProjectList(Resource):
         parser.add_argument('afterChk', help='required')
         parser.add_argument('beforeDpy', help='required')
         parser.add_argument('afterDpy', help='required')
-        parser.add_argument('hosts', help='required')
+        parser.add_argument('hosts', action='append', help='required')
         parser.add_argument('project_id', help='required')
         args = parser.parse_args()
+        _project = ProjectModel.first(project_id=args['project_id'])
+        if _project is not None:
+            return '项目已存在，请勿重复创建！'
+        hosts = [HostModel.get(int(h)) for h in args['hosts']]
         _project = ProjectModel.create(
             name=args['name'],
             before_checkout=args['beforeChk'],
             after_checkout=args['afterChk'],
             before_deploy=args['beforeDpy'],
             after_deploy=args['afterDpy'],
-            project_id=args['project_id'])
-        for h in args['hosts']:
-            _project.hosts.append(HostModel.first(ip_addr=h))
-        ProjectModel.save(_project)
+            project_id=args['project_id'],
+            hosts=hosts)
         return '新建成功'
 
 

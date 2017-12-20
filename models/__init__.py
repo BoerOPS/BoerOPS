@@ -19,7 +19,7 @@ class Base:
     @classmethod
     def get(cls, id):
         # http://docs.sqlalchemy.org/en/latest/orm/session_api.html#sqlalchemy.orm.session.Session.expire_all
-        db.session.expire_all()
+        # db.session.expire_all()
         return cls.query.get(id)
 
     @classmethod
@@ -59,6 +59,10 @@ class Base:
     def delete(cls, record, **kwargs):
         "It's danger"
         db.session.delete(record)
+        db.session.commit()
+
+    @classmethod
+    def session_commit(cls):
         db.session.commit()
 
     def __del__(self):
