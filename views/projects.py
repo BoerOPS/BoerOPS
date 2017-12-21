@@ -1,5 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, g
-# from flask_login import login_required
+from flask import Blueprint, render_template, request, g
 from flask_restful import Api, Resource, abort, reqparse
 
 import gitlab
@@ -20,7 +19,7 @@ parser = reqparse.RequestParser()
 
 class Project(Resource):
     def get(self, id):
-        project = Project.abort_if_project_doesnt_exist(id)
+        project = abort_if_project_doesnt_exist(id)
         return project.attributes
 
     def delete(self):
@@ -29,17 +28,17 @@ class Project(Resource):
     def put(self):
         pass
 
-    @staticmethod
-    def abort_if_project_doesnt_exist(id):
-        try:
-            project = g.gl.projects.get(id)
-        except gitlab.GitlabGetError as e:
-            abort(100404, message="Project %s doesn't exist" % id)
-        return project
-        # @TODOS
-        # project = Project.query.filter_by(id=project_id).first()
-        # if project is None:
-        #     abort(404, message="Project %s doesn't exist" % project_id)
+
+def abort_if_project_doesnt_exist(id):
+    try:
+        _project = g.gl.projects.get(id)
+    except gitlab.GitlabGetError as e:
+        abort(100404, message="Project %s doesn't exist" % id)
+    return _project
+    # @TODO
+    # project = Project.query.filter_by(id=project_id).first()
+    # if project is None:
+    #     abort(404, message="Project %s doesn't exist" % project_id)
 
 
 class ProjectList(Resource):
@@ -47,22 +46,25 @@ class ProjectList(Resource):
         ops = request.args.get('ops')
         if ops is not None:
             _projects = ProjectModel.all()
-            return [{'project_id': p.project_id, 'name': p.name} for p in _projects]
-        offset = request.args.get('offset')
-        limit = request.args.get('limit')
-        # projects = Project.query.limit(10).offset(10)
+            return [{
+                'project_id': p.project_id,
+                'name': p.name
+            } for p in _projects]
+        # projects = ProjectModel.query.limit(10).offset(10)
         # https://gitlab.com/help/api/projects.md
         projects = g.gl.projects.list(membership=True)
-        res = {}
-        res['projects'] = [{
-            'id': p.id,
-            'name': p.name,
-            'ssh_url_to_repo': p.ssh_url_to_repo,
-            'owner': p.owner['name'],
-            'web_url': p.web_url,
-            'visibility': p.visibility
-        } for p in projects]
-        res['total'] = len(projects)
+        res = {
+            'projects': [{
+                'id': p.id,
+                'name': p.name,
+                'ssh_url_to_repo': p.ssh_url_to_repo,
+                'owner': p.owner['name'],
+                'web_url': p.web_url,
+                'visibility': p.visibility
+            } for p in projects],
+            'total':
+            len(projects)
+        }
         return res
 
     def post(self):
@@ -86,6 +88,8 @@ class ProjectList(Resource):
             after_deploy=args['afterDpy'],
             project_id=args['project_id'],
             hosts=hosts)
+        if _project is None:
+            return '创建失败'
         return '新建成功'
 
 
@@ -97,7 +101,7 @@ class Branch(Resource):
         project_id = args['project_id']
         operation = args['operation']
         # 项目
-        project = Project.abort_if_project_doesnt_exist(project_id)
+        project = abort_if_project_doesnt_exist(project_id)
         # 分支
         branch = project.branches.get(id)
         if operation == 'protect':
@@ -111,29 +115,26 @@ class Branch(Resource):
 class BranchList(Resource):
     def get(self):
         project_id = request.args.get('project_id')
-        project = Project.abort_if_project_doesnt_exist(project_id)
+        project = abort_if_project_doesnt_exist(project_id)
         return [b.get_id() for b in project.branches.list(all=True)]
 
 
 class CommitList(Resource):
     def get(self):
         project_id = request.args.get('project_id')
-        project = Project.abort_if_project_doesnt_exist(project_id)
+        project = abort_if_project_doesnt_exist(project_id)
         res = []
         for branch in [b.get_id() for b in project.branches.list(all=True)]:
-            pre_brach_commites = {}
-            pre_brach_commites['value'] = branch
-            pre_brach_commites['label'] = branch
+            pre_branch_commits = {'value': branch, 'label': branch}
             commits = project.commits.list(ref_name=branch)
-            pre_brach_commites['children'] = [{
-                'value':
-                c.attributes['id'],
-                'label':
-                c.attributes['author_name'] + ' $ ' + c.attributes['message'] +
-                ' @ ' + c.attributes['short_id']
-            } for c in commits]
-            res.append(pre_brach_commites)
-        # res = [{'author': c.attributes['author_name'], 'id': c.attributes['id'], 'message': c.attributes['message'], 'committed_date': c.attributes['committed_date']} for c in commits]
+            pre_branch_commits['children'] = [
+                dict(
+                    value=c.attributes['id'],
+                    label=c.attributes['author_name'] + ' $ ' +
+                    c.attributes['message'] + ' @ ' + c.attributes['short_id'])
+                for c in commits
+            ]
+            res.append(pre_branch_commits)
         return res
 
 
@@ -141,4 +142,4 @@ api.add_resource(Project, '/projects/<int:id>', endpoint='project')
 api.add_resource(ProjectList, '/projects', endpoint='projects')
 api.add_resource(Branch, '/branches/<string:id>', endpoint='branch')
 api.add_resource(BranchList, '/branches', endpoint='branches')
-api.add_resource(CommitList, '/commites', endpoint='commites')
+api.add_resource(CommitList, '/commits', endpoint='commits')

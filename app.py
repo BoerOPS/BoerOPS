@@ -40,6 +40,7 @@ def create_app(config_name):
 
     return app
 
+
 # from models.users import User
 # @lm.user_loader
 # def load_user(id):
