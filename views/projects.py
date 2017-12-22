@@ -33,26 +33,34 @@ def abort_if_project_doesnt_exist(id):
     try:
         _project = g.gl.projects.get(id)
     except gitlab.GitlabGetError as e:
-        abort(100404, message="Project %s doesn't exist" % id)
+        abort(404, message="Project %s doesn't exist" % id)
     return _project
-    # @TODO
-    # project = Project.query.filter_by(id=project_id).first()
-    # if project is None:
-    #     abort(404, message="Project %s doesn't exist" % project_id)
 
 
 class ProjectList(Resource):
     def get(self):
         ops = request.args.get('ops')
-        if ops is not None:
-            _projects = ProjectModel.all()
-            return [{
-                'project_id': p.project_id,
-                'name': p.name
-            } for p in _projects]
         # projects = ProjectModel.query.limit(10).offset(10)
         # https://gitlab.com/help/api/projects.md
         projects = g.gl.projects.list(membership=True)
+        if g.current_user.attributes.get('is_admin'):
+            projects = g.gl.projects.list(all=True)
+        if ops is not None:
+            membership_projects = [p.id for p in projects]
+            _projects = []
+            for pid in membership_projects:
+                _p = ProjectModel.get(int(pid))
+                if _p is None:
+                    continue
+                _projects.append(_p)
+            # _projects = [
+            #     ProjectModel.get(pid) for pid in membership_projects
+            #     if ProjectModel.get(pid) is not None
+            # ]
+            return [{
+                'project_id': p.id,
+                'name': p.name
+            } for p in _projects]
         res = {
             'projects': [{
                 'id': p.id,
@@ -76,17 +84,17 @@ class ProjectList(Resource):
         parser.add_argument('hosts', action='append', help='required')
         parser.add_argument('project_id', help='required')
         args = parser.parse_args()
-        _project = ProjectModel.first(project_id=args['project_id'])
+        _project = ProjectModel.get(args['project_id'])
         if _project is not None:
             return '项目已存在，请勿重复创建！'
         hosts = [HostModel.get(int(h)) for h in args['hosts']]
         _project = ProjectModel.create(
+            id=args['project_id'],
             name=args['name'],
             before_checkout=args['beforeChk'],
             after_checkout=args['afterChk'],
             before_deploy=args['beforeDpy'],
             after_deploy=args['afterDpy'],
-            project_id=args['project_id'],
             hosts=hosts)
         if _project is None:
             return '创建失败'
