@@ -5,7 +5,6 @@ import gitlab
 
 from models.users import User as UserModel
 
-from functools import wraps
 from urllib.parse import urlencode
 
 bp = Blueprint('user', __name__)
@@ -45,25 +44,24 @@ def oauth2_welcome():
     scope = resp.get('scope')
     token_type = resp.get('token_type')
     # 入库操作
-    # if access_token:
-    #     gl = gitlab.Gitlab(
-    #         'http://gitlab.onenet.com',
-    #         oauth_token=access_token,
-    #         api_version='4')
-    #     gl.auth()
-    #     u = UserModel.first(gitlab_id=gl.user.id)
-    #     if u is None:
-    #         u = UserModel.create(
-    #             gitlab_id=gl.user.id,
-    #             gitlab_username=gl.user.username,
-    #             gitlab_name=gl.user.name,
-    #             gitlab_email=gl.user.email,
-    #             gitlab_avatar=gl.user.avatar_url)
-    # else:
-    #     return jsonify(resp)
-    # refresh token return
-    if access_token is None:
+    if access_token:
+        print('---access_token--->', access_token)
+        gl = gitlab.Gitlab(
+            'http://gitlab.onenet.com',
+            oauth_token=access_token,
+            api_version='4')
+        gl.auth()
+        u = UserModel.get(gl.user.id)
+        if u is None:
+            u = UserModel.create(
+                id=gl.user.id,
+                gitlab_username=gl.user.username,
+                gitlab_name=gl.user.name,
+                gitlab_email=gl.user.email,
+                gitlab_avatar=gl.user.avatar_url)
+    else:
         return jsonify(resp)
+    # refresh token return
     if code is None:
         return jsonify({
             'access_token': access_token,

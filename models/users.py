@@ -9,7 +9,6 @@ class User(db.Model, Base, TimestampMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    gitlab_id = db.Column(db.Integer)
     gitlab_username = db.Column(db.String(16))
     gitlab_name = db.Column(db.String(32))
     gitlab_email = db.Column(db.String(64))

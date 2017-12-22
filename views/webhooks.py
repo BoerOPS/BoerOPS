@@ -1,17 +1,49 @@
-import json
-
-from flask import Blueprint, render_template, request, jsonify
-
-from models.commits import Commit
-from models.tests import Test
-
-bp = Blueprint('webhook', __name__)
-
-
+from flask import Blueprint, render_template, request, jsonify, g
+from flask_restful import Api, Resource, reqparse
 import gitlab
 
-hook_url = 'http://webhook.mail.heclouds.com/pushhook'
+from models.commits import Commit as CommitModel
 
+import json
+
+bp = Blueprint('webhook', __name__)
+api = Api(bp)
+
+parser = reqparse.RequestParser()
+
+
+class WebHook(Resource):
+    def get(self):
+        return {'task': 'done'}
+
+    def post(self):
+        parser.add_argument('name', help='required')
+        parser.add_argument('email', help='required')
+        parser.add_argument('username', help='required')
+        parser.add_argument('password', help='required')
+        args = parser.parse_args()
+        user = g.gl.users.create({
+            'email': args['email'],
+            'password': args['password'],
+            'username': args['username'],
+            'name': args['name']
+        })
+        onenet_v3 = g.gl.projects.get(32)
+        public_doc = g.gl.projects.get(9)
+        onenet_v3.members.create({
+            'user_id': user.id,
+            'access_level': gitlab.DEVELOPER_ACCESS
+        })
+        public_doc.members.create({
+            'user_id': user.id,
+            'access_level': gitlab.DEVELOPER_ACCESS
+        })
+        return 'create done'
+
+
+api.add_resource(WebHook, '/webhooks', endpoint='webhook')
+
+hook_url = 'http://webhook.mail.heclouds.com/pushhook'
 gl = gitlab.Gitlab('http://gitlab.onenet.com', 'W8jWv6i_X9WRtMRr2xgv')
 
 
@@ -20,13 +52,17 @@ gl = gitlab.Gitlab('http://gitlab.onenet.com', 'W8jWv6i_X9WRtMRr2xgv')
 def add_pushhook():
     res_success = res_already = []
     for p in gl.projects.list(all=True):
-        per_project_hooks = [hook.url for hook in gl.project_hooks.list(project_id=p.id)]
+        per_project_hooks = [
+            hook.url for hook in gl.project_hooks.list(project_id=p.id)
+        ]
         if hook_url not in per_project_hooks:
-            gl.project_hooks.create({
-                'url': hook_url,
-                'push_events': 1,
-                'enable_ssl_verification': 0
-            }, project_id=p.id)
+            gl.project_hooks.create(
+                {
+                    'url': hook_url,
+                    'push_events': 1,
+                    'enable_ssl_verification': 0
+                },
+                project_id=p.id)
             res_success.append(p.name)
         else:
             res_already.append(p.name)
@@ -67,7 +103,7 @@ def push_hook():
     commits = ((item['id'], item['message'], item['url'], item['timestamp'])
                for item in body['commits'])
     for c in commits:
-        Commit.create(
+        CommitModel.create(
             project_id=project_id,
             project_name=project_name,
             ref=ref,
@@ -80,9 +116,3 @@ def push_hook():
             user_name=user_name,
             user_email=user_email)
     return ''
-
-
-@bp.route('/orm_test/<name>')
-def orm_test(name):
-    Test.create(name=name)
-    return 'done'

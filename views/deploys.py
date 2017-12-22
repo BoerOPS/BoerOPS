@@ -3,7 +3,10 @@ from flask_restful import Api, Resource, reqparse
 
 from models.projects import Project as ProjectModel
 from models.hosts import Host as HostModel
+from models.users import User as UserModel
 from libs.services import DeployService
+
+import time
 
 bp = Blueprint('deploy', __name__)
 api = Api(bp)
@@ -26,18 +29,29 @@ class DeployList(Resource):
         parser.add_argument('env', help='required')
         parser.add_argument('commit', action='append', help='required')
         args = parser.parse_args()
-        print('---args--->', args)
-        print('---args--->', type(args['env']))
-        # {'commit_id': None, 'branch_id': None, 'project_id': '121'}
-        _project = g.gl.projects.get(args['project_id'])
+        project_id = args['project_id']
+        # 版本
+        branch_id = args[commit][0]
+        commit_id = args[commit][1]
+        # 仓库信息 eg. git_repo
+        _project = g.gl.projects.get(project_id)
         ssh_url_to_repo = _project.attributes.get('ssh_url_to_repo')
         name = _project.attributes.get('name')
-        _hosts = ProjectModel.get(args['project_id']).hosts
+        # 部署信息 eg. 部署前后需要执行的命令
+        project = ProjectModel.get(project_id)
+        proj_name = project.name
+        proj_before_checkout = project.before_checkout
+        proj_after_checkout = project.after_checkout
+        proj_before_deploy = project.before_deploy
+        proj_after_deploy = project.after_deploy
+        proj_hosts = [h.ip_addr for h in project.hosts if h.env == 1]
         if args['env'] == 'True':
-            hosts = [h.ip_addr for h in _hosts if h.env == 0]
-        else:
-            hosts = [h.ip_addr for h in _hosts if h.env == 1]
-        print('---hosts--->', hosts)
+            proj_hosts = [h.ip_addr for h in project.hosts if h.env == 0]
+        # 记录信息 eg. 发布者、时间
+        user = UserModel.get(args['current_user'])
+        user_name = user.gitlab_username
+        deploy_time = time.time()
+
         ds = DeployService()
         return ds.test()
 
