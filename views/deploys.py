@@ -31,8 +31,8 @@ class DeployList(Resource):
         args = parser.parse_args()
         project_id = args['project_id']
         # 版本
-        branch_id = args[commit][0]
-        commit_id = args[commit][1]
+        branch_id = args['commit'][0]
+        commit_id = args['commit'][1]
         # 仓库信息 eg. git_repo
         _project = g.gl.projects.get(project_id)
         ssh_url_to_repo = _project.attributes.get('ssh_url_to_repo')

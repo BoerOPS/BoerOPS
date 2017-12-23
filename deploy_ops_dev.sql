@@ -4,3 +4,5 @@ ALTER TABLE users ADD PRIMARY KEY (id);
 ALTER TABLE projects DROP COLUMN id;
 UPDATE rel_project_host SET project_id=121 WHERE id > 2 AND id <= 7;
 ALTER TABLE projects CHANGE COLUMN project_id id INTEGER;
+
+a001cb353c1ef12bf3e6ed3dd9767a53df2041ef30f34b726b2b5eee889245be

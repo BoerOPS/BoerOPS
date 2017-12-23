@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, g
-from flask_restful import Api, Resource, reqparse
+from flask_restful import Api, Resource, reqparse, abort
 import gitlab
 
 from models.commits import Commit as CommitModel
@@ -11,10 +11,26 @@ api = Api(bp)
 
 parser = reqparse.RequestParser()
 
+def abort_if_user_doesnt_exist(username):
+    try:
+        _user = g.gl.users.list(username=username)[0]
+    except IndexError as e:
+        abort(404, message="User %s doesn't exist" % username)
+    return _user
 
 class WebHook(Resource):
+    def get(self, username):
+        _user = abort_if_user_doesnt_exist(username)
+        return {'id': _user.id, 'name': _user.name, 'email': _user.email}
+
+    def delete(self, username):
+        _user = abort_if_user_doesnt_exist(username)
+        _user.delete()
+        return '删除用户成功'
+
+class WebHookList(Resource):
     def get(self):
-        return {'task': 'done'}
+        pass
 
     def post(self):
         parser.add_argument('name', help='required')
@@ -22,12 +38,15 @@ class WebHook(Resource):
         parser.add_argument('username', help='required')
         parser.add_argument('password', help='required')
         args = parser.parse_args()
-        user = g.gl.users.create({
-            'email': args['email'],
-            'password': args['password'],
-            'username': args['username'],
-            'name': args['name']
-        })
+        try:
+            user = g.gl.users.create({
+                'email': args['email'],
+                'password': args['password'],
+                'username': args['username'],
+                'name': args['name']
+            })
+        except gitlab.exceptions.GitlabCreateError as e:
+            return 'create error'
         onenet_v3 = g.gl.projects.get(32)
         public_doc = g.gl.projects.get(9)
         onenet_v3.members.create({
@@ -41,7 +60,8 @@ class WebHook(Resource):
         return 'create done'
 
 
-api.add_resource(WebHook, '/webhooks', endpoint='webhook')
+api.add_resource(WebHook, '/webhooks/<string:username>', endpoint='webhook')
+api.add_resource(WebHookList, '/webhooks', endpoint='webhooks')
 
 hook_url = 'http://webhook.mail.heclouds.com/pushhook'
 gl = gitlab.Gitlab('http://gitlab.onenet.com', 'W8jWv6i_X9WRtMRr2xgv')
