@@ -1,9 +1,59 @@
+import os
+import subprocess
+
+from models.deploys import Deploy as DeployModel
+
+
 class DeployService:
-    def __init__(self):
-        pass
+    def __init__(self, deploy, checkout_path, deploy_path):
+        self.deploy = deploy
+        self.checkout_path = checkout_path
+        self.deploy_path = deploy_path
 
     def test(self):
         return '部署成功'
+
+    def step_1(self, repo_ssh_url, repo_name):
+        "clone or fetch repo"
+        commit_id = self.deploy.commit_id
+        # prepare code
+        full_checkout_path = os.path.join(self.checkout_path, repo_name)
+        full_deploy_path = os.path.join(self.deploy_path, repo_name)
+        if os.path.exists(full_checkout_path) and os.path.isdir(
+                full_checkout_path):
+            cmd = 'git reset -q --hard origin/master && git fetch -all -q'
+            rs = subprocess.run(cmd.split(), cwd=full_checkout_path)
+            if rs:
+                return {'status': 1, 'msg': 'git fetch failed'}
+        else:
+            cmd = 'git clone -q %s %s' % (repo_ssh_url, repo_name)
+            rs = subprocess.run(cmd.split())
+            if rs:
+                return {'status': 1, 'msg': 'git clone failed'}
+        # cmd  = 'git reset -q --hard %s' % commit_id
+        # rs = subprocess.run(cmd.split(), cwd=full_checkout_path)
+        # if rs:
+        #     return {'status': 1, 'msg': 'git reset failed'}
+        # cmd = 'rsync -qa --delete --exclude .git %s %s' % (full_checkout_path,
+        #                                                    full_deploy_path)
+        # rs = subprocess.run(cmd.split())
+        # if rs:
+        #     return {'status': 1, 'msg': 'shell rsync failed'}
+
+        return {'status': 1, 'msg': 'prepare code success'}
+
+    def step_2(self):
+        # exec before commands
+        cmd = self.deploy.project.before_cmd
+        return cmd
+
+    def step_3(self):
+        # deploy
+        pass
+
+    def step_4(self):
+        # exec after commands
+        pass
 
     def deploy_task(self, project_id, environ):
         c_d = self.first(

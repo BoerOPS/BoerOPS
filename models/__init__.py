@@ -65,8 +65,8 @@ class Base:
     def session_commit(cls):
         db.session.commit()
 
-    def __del__(self):
-        db.session.close()
+    # def __del__(self):
+    #     db.session.close()
 
 
 class TimestampMixin:

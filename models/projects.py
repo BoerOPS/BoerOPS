@@ -26,13 +26,10 @@ rel_project_host = db.Table('rel_project_host',
 class Project(db.Model, Base, TimestampMixin):
     __tablename__ = 'projects'
 
-    # id = db.Column(db.Integer)
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    before_checkout = db.Column(db.Text)
-    after_checkout = db.Column(db.Text)
-    before_deploy = db.Column(db.Text)
-    after_deploy = db.Column(db.Text)
+    before_cmd = db.Column(db.Text)
+    after_cmd = db.Column(db.Text)
 
     hosts = db.relationship(
         'Host',

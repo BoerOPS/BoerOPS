@@ -77,10 +77,8 @@ class ProjectList(Resource):
 
     def post(self):
         parser.add_argument('name', help='required')
-        parser.add_argument('beforeChk', help='required')
-        parser.add_argument('afterChk', help='required')
-        parser.add_argument('beforeDpy', help='required')
-        parser.add_argument('afterDpy', help='required')
+        parser.add_argument('beforeCmd', help='required')
+        parser.add_argument('afterCmd', help='required')
         parser.add_argument('hosts', action='append', help='required')
         parser.add_argument('project_id', help='required')
         args = parser.parse_args()
@@ -91,10 +89,8 @@ class ProjectList(Resource):
         _project = ProjectModel.create(
             id=args['project_id'],
             name=args['name'],
-            before_checkout=args['beforeChk'],
-            after_checkout=args['afterChk'],
-            before_deploy=args['beforeDpy'],
-            after_deploy=args['afterDpy'],
+            before_cmd=args['beforeCmd'],
+            after_cmd=args['afterCmd'],
             hosts=hosts)
         if _project is None:
             return '创建失败'
