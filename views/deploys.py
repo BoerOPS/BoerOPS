@@ -65,9 +65,8 @@ class DeployList(Resource):
             env=environment,
             user_id=user_id,
             introduce=args['version_intro'])
-        checkout_path = current_app.config['CHECKOUT_PATH']
-        deploy_path = current_app.config['DEPLOY_PATH']
-        ds = DeployService(deploy, checkout_path, deploy_path)
+        config = current_app.config['DEPLOYMENT']
+        ds = DeployService(deploy, config)
         return ds.step_1(ssh_url_to_repo, name)
 
 

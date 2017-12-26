@@ -6,10 +6,10 @@ from models.deploys import Deploy as DeployModel
 
 
 class DeployService:
-    def __init__(self, deploy, checkout_path, deploy_path):
+    def __init__(self, deploy, config):
         self.deploy = deploy
-        self.checkout_path = checkout_path
-        self.deploy_path = deploy_path
+        self.checkout_path = config.get('CHECKOUT_PATH')
+        self.deploy_path = config.get('DEPLOY_PATH')
 
     def test(self):
         return '部署成功'
@@ -31,35 +31,36 @@ class DeployService:
             rs = subprocess.run(cmd.split(), cwd=self.checkout_path)
             if rs.returncode:
                 return {'status': 1, 'msg': 'git clone failed'}
-        cmd  = 'git reset -q --hard %s' % commit_id
+        cmd = 'git reset -q --hard %s' % commit_id
         rs = subprocess.run(cmd.split(), cwd=full_checkout_path)
         if rs.returncode:
             return {'status': 1, 'msg': 'git reset failed'}
-
-        EXCLUDE_DIRS = ['.git']
-        EXCLUDE_FILES = ['.gitignore']
-        os.chdir(self.checkout_path)
-        with tarfile.open(full_deploy_path + '.tgz', 'w:gz') as tar:
-            for root, dirs, files in os.walk(repo_name):
-                dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
-                for file in files:
-                    if file in EXCLUDE_FILES:
-                        continue
-                    fullpath = os.path.join(root, file)
-                    print('--->', fullpath)
-                    tar.add(fullpath)
-        # cmd = 'cd %s && tar -zcf %s.tar.gz --exclude-vcs --exclude-vcs-ignores *' % (
-        #     full_checkout_path, repo_name)
-        # rs = subprocess.run(cmd.split(), shell=True, cwd=self.deploy_path)
-        # if rs.returncode:
-        #     return {'status': 1, 'msg': 'shell rsync failed'}
-
+        # EXCLUDE_DIRS = ['.git']
+        # EXCLUDE_FILES = ['.gitignore']
+        # os.chdir(self.checkout_path)
+        # with tarfile.open(full_deploy_path + '.tgz', 'w:gz') as tar:
+        #     for root, dirs, files in os.walk(repo_name):
+        #         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+        #         for file in files:
+        #             if file in EXCLUDE_FILES:
+        #                 continue
+        #             fullpath = os.path.join(root, file)
+        #             tar.add(fullpath)
+        DeployModel.update(self.deploy, status=1)
         return {'status': 1, 'msg': 'prepare code success'}
 
     def step_2(self):
         # exec before commands
         cmd = self.deploy.project.before_cmd
-        return cmd
+        # TODO
+        # exec default commands
+        cmd = 'tar -zcf %s.tgz --exclude-vcs --exclude-vcs-ignores -C %s .' % (
+            repo_name, full_checkout_path)
+        rs = subprocess.run(cmd.split(), cwd=self.deploy_path)
+        if rs.returncode:
+            return {'status': 2, 'msg': 'shell tar failed'}
+        DeployModel.update(self.deploy, status=2)
+        return {'status': 2, 'msg': 'exec before commands success'}
 
     def step_3(self):
         # deploy

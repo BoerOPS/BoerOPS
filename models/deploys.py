@@ -6,7 +6,12 @@ class Deploy(db.Model, Base, TimestampMixin):
     __tablename__ = 'deploys'
 
     id = db.Column(db.Integer, primary_key=True)
-    # 0: deploy recode created; 1: prepare code; 2: exec before commands; 3: deploy code; 4: exec after commands
+    # 0: deploy recode created;
+    # 1: prepare code;
+    # 2: exec before commands;
+    # 3: deploy code;
+    # 4: exec after commands;
+    # 5: deploy done.
     status = db.Column(db.Integer)
     project_id = db.Column(
         db.Integer, db.ForeignKey('projects.id'), nullable=False)
