@@ -53,10 +53,10 @@ class DeployList(Resource):
         # 记录信息 eg. 发布者、时间
         user = UserModel.get(user_id)
         user_name = user.gitlab_username
-        deploy = DeployModel.first(
-            project_id=project_id, status=0, env=environment)
-        if deploy is not None:
-            return {'status': 0, 'msg': '当前项目在当前环境上有未完成的部署任务，请稍后！'}
+        # deploy = DeployModel.first(
+        #     project_id=project_id, status=0, env=environment)
+        # if deploy is not None:
+        #     return {'status': 0, 'msg': '当前项目在当前环境上有未完成的部署任务，请稍后！'}
         deploy = DeployModel.create(
             status=0,
             project_id=project_id,
