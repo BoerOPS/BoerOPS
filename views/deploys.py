@@ -19,6 +19,9 @@ class Deploy(Resource):
     def get(self, id):
         return {'task': 'done'}
 
+    def delete(self, id):
+        pass
+
 
 class DeployList(Resource):
     def get(self):
@@ -38,8 +41,10 @@ class DeployList(Resource):
         user_id = int(args['current_user'])
         # 仓库信息 eg. git_repo
         _project = g.gl.projects.get(project_id)
-        ssh_url_to_repo = _project.attributes.get('ssh_url_to_repo')
-        name = _project.attributes.get('name')
+        gitlab_project_info = {
+            'name': _project.attributes.get('name'),
+            'repo_ssh_url': _project.attributes.get('ssh_url_to_repo')
+        }
         # 部署信息 eg. 部署前后需要执行的命令
         project = ProjectModel.get(project_id)
         proj_name = project.name
@@ -53,8 +58,9 @@ class DeployList(Resource):
         # 记录信息 eg. 发布者、时间
         user = UserModel.get(user_id)
         user_name = user.gitlab_username
-        # deploy = DeployModel.first(
-        #     project_id=project_id, status=0, env=environment)
+        # deploy = DeployModel.query.filter(
+        #     DeployModel.project_id == project_id, DeployModel.status != 5,
+        #     DeployModel.env == environment).first()
         # if deploy is not None:
         #     return {'status': 0, 'msg': '当前项目在当前环境上有未完成的部署任务，请稍后！'}
         deploy = DeployModel.create(
@@ -66,8 +72,8 @@ class DeployList(Resource):
             user_id=user_id,
             introduce=args['version_intro'])
         config = current_app.config['DEPLOYMENT']
-        ds = DeployService(deploy, config)
-        return ds.step_1(ssh_url_to_repo, name)
+        ds = DeployService(deploy, config, gitlab_project_info)
+        return ds.step_1()
 
 
 api.add_resource(Deploy, '/deploys/<int:id>', endpoint='deploy')

@@ -105,6 +105,15 @@ def before_pre_request():
     g.gl = gl
 
 
+@bp.route('/joke')
+def joke():
+    from pyquery import PyQuery as pq
+    from random import randint
+    doc = pq('http://xiaohua.zol.com.cn/new/')
+    jokes = [doc(i).text() for i in doc('div.summary-text')]
+    return jsonify(code=100200, joke=jokes[randint(0, len(jokes))])
+
+
 class CurrentUser(Resource):
     def get(self):
         return g.current_user.attributes
