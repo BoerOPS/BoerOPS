@@ -1,103 +1,117 @@
 <template>
-  <el-form :model="loginForm" :rules="loginFormRule" ref="loginFormRule" label-position="left" label-width="0px" class="demo-ruleForm login-container">
-    <h3 class="title">系统登录</h3>
-    <el-form-item prop="username">
-      <el-input type="text" v-model="loginForm.username" auto-complete="off" placeholder="账号"></el-input>
-    </el-form-item>
-    <el-form-item prop="password">
-      <el-input type="password" v-model="loginForm.password" auto-complete="off" placeholder="密码"></el-input>
-    </el-form-item>
-    <el-checkbox v-model="checked" checked class="remember">记住密码</el-checkbox>
-    <el-form-item style="width:100%;">
-      <el-button type="primary" style="width:100%;" @click.native.prevent="doLogin" :loading="logining">登录</el-button>
-      <!-- <el-button @click.native.prevent="doReset">重置</el-button> -->
-    </el-form-item>
-  </el-form>
+  <div class="login">
+    <img src="../assets/plastic_pet_dog.jpg">
+    <el-button
+      class="button is-success"
+      v-if="refreshed"
+      @click="getAccessToken"
+      v-loading="loading">
+      <strong style="font-size: 18px">登录</strong> with gitlab
+    </el-button>
+    <el-button
+      class="button is-primary"
+      v-else
+      type="primary"
+      icon="el-icon-arrow-right"
+      onclick="window.location.href='http://webhook.mail.heclouds.com/auth/login'">
+      <strong style="font-size: 18px">登录</strong> with gitlab
+    </el-button>
+  </div>
 </template>
-
 <script>
 export default {
+  name: "Login",
   data() {
     return {
-      logining: false,
-      loginForm: {
-        username: 'admin',
-        password: '123456'
-      },
-      loginFormRule: {
-        username: [
-          { required: true, message: '请输入账号', trigger: 'blur' },
-          //{ validator: validaeUsername }
-        ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          //{ validator: validaePassword }
-        ]
-      },
-      checked: true
+      msg: "Login in with gitlab.",
+      refreshed: localStorage.getItem("refresh_token"),
+      loading: false,
+      activator: false
     };
   },
+  //created、mounted、updated、destroyed
+  created: function() {
+    if (JSON.stringify(this.$route.query) !== "{}") {
+      let data = this.$route.query;
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("created_at", data.created_at);
+      localStorage.setItem("scope", data.scope);
+      localStorage.setItem("token_type", data.token_type);
+      this.$router.push({ name: "Home" });
+    }
+  },
+  mounted: function() {},
+  computed: {
+    now: function() {
+      return Date.now();
+    }
+  },
   methods: {
-    doReset() {
-      this.$refs.loginForm.resetFields();
+    getBurger() {
+      this.activator = !this.activator;
+      return this.activator;
     },
-    doLogin(ev) {
-      this.$refs.loginFormRule.validate((valid) => {
-        if (valid) {
-          this.logining = true;
-          this.$http.get('/user/token')
-            .then(resp => {
-              this.logining = false;
-              this.$router.push({ path: '/home' });
-            })
-          // var loginParams = { username: this.loginForm.username, password: this.loginForm.password };
-          // // 登录
-          // this.$http.post('/api/login', loginParams)
-          //   .then(resp => {
-          //     this.logining = false;
-          //     let { code, msg, user } = resp.data;
-          //     if (code !== 200) {
-          //       this.$message({
-          //         message: msg,
-          //         type: 'error',
-          //         duration: 1000
-          //       });
-          //     } else {
-          //       sessionStorage.setItem('user', JSON.stringify(user));
-          //       this.$router.push({ path: '/home' });
-          //     }
-          //   });
-        } else {
-          console.log('error submit!!');
-          return false;
-        }
+    promptMsg(msg) {
+      this.$message({
+        message: msg,
+        // center: true,
+        showClose: true,
+        type: "error"
       });
+    },
+    getAccessToken() {
+      this.loading = true;
+      setTimeout(() => {
+        this.loading = false;
+      }, 8000);
+      var _this = this;
+      let refresh_token = localStorage.getItem("refresh_token");
+      let scope = localStorage.getItem("scope");
+      if (
+        !refresh_token ||
+        refresh_token === "undefined" ||
+        refresh_token === "null"
+      ) {
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("scope");
+        this.loading = false;
+        this.$router.push({ name: "Login" });
+        return false;
+      }
+      this.$http
+        .get("/api/oauth2/welcome", {
+          params: {
+            refresh_token: refresh_token,
+            scope: scope
+          }
+        })
+        .then(resp => {
+          let data = resp.data;
+          if (data.error === "invalid_grant") {
+            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("scope");
+            localStorage.removeItem("token_type");
+            this.refreshed = false;
+            this.loading = false;
+            this.promptMsg(data.error_description);
+            return false;
+          }
+          localStorage.setItem("access_token", data.access_token);
+          localStorage.setItem("refresh_token", data.refresh_token);
+          localStorage.setItem("created_at", data.created_at);
+          localStorage.setItem("scope", data.scope);
+          localStorage.setItem("token_type", data.token_type);
+          this.$router.push({ name: "Home" });
+        })
+        .catch(err => {
+          console.log(err);
+        });
     }
   }
-}
-
+};
 </script>
 
-<style lang="less" scoped>
-.login-container {
-  // box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.06), 0 1px 0px 0 rgba(0, 0, 0, 0.02);
-  -webkit-border-radius: 5px;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  background-clip: padding-box;
-  margin: 180px auto;
-  width: 350px;
-  padding: 35px 35px 15px 35px;
-  background: #fff;
-  border: 1px solid #eaeaea;
-  box-shadow: 0 0 25px #cac6c6;
-  .title {
-    margin: 0px auto 40px auto;
-    text-align: center;
-    color: #505458;
-  }
-  .remember {
-    margin: 0px 0px 35px 0px;
-  }
-}
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style lang="scss" scoped>
 </style>
