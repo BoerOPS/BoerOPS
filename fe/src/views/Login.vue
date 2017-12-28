@@ -80,7 +80,7 @@ export default {
         return false;
       }
       this.$http
-        .get("/api/oauth2/welcome", {
+        .get("/oauth2/welcome", {
           params: {
             refresh_token: refresh_token,
             scope: scope

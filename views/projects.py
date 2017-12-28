@@ -8,12 +8,6 @@ from models.hosts import Host as HostModel
 bp = Blueprint('project', __name__)
 api = Api(bp)
 
-
-@bp.route('/')
-def test_for_vue():
-    return render_template('index.html')
-
-
 parser = reqparse.RequestParser()
 
 
@@ -57,10 +51,7 @@ class ProjectList(Resource):
             #     ProjectModel.get(pid) for pid in membership_projects
             #     if ProjectModel.get(pid) is not None
             # ]
-            return [{
-                'project_id': p.id,
-                'name': p.name
-            } for p in _projects]
+            return [{'project_id': p.id, 'name': p.name} for p in _projects]
         res = {
             'projects': [{
                 'id': p.id,

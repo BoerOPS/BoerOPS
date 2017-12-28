@@ -74,13 +74,13 @@ export default {
   methods: {
     getAllHost() {
       this.loading = true;
-      this.$http.get("/api/hosts").then(resp => {
+      this.$http.get("/hosts").then(resp => {
         this.allHost = resp.data;
         this.loading = false;
       });
     },
     createHost() {
-      this.$http.post("/api/hosts", this.host).then(resp => {
+      this.$http.post("/hosts", this.host).then(resp => {
         this.createHostVisible = false;
         this.$message({
           showClose: true,

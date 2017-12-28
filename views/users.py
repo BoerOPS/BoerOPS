@@ -1,4 +1,5 @@
-from flask import Blueprint, redirect, request, jsonify, make_response, current_app, g
+from flask import Blueprint, redirect, request, jsonify, \
+                    make_response, current_app, g, render_template
 from flask_restful import Api, Resource
 import requests
 import gitlab
@@ -78,8 +79,8 @@ def oauth2_welcome():
         'scope': scope,
         'token_type': token_type
     })
-    return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
-    # return redirect('http://127.0.0.1:8080/#/login?' + querystring)
+    # return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
+    return redirect('http://127.0.0.1:5000/#/login?' + querystring)
 
 
 @bp.route('/auth/login')
@@ -93,7 +94,8 @@ def auth_login():
 
 @bp.before_app_request
 def before_pre_request():
-    if request.path in ['/auth/login', '/oauth2/welcome']:
+    if request.path in ['/auth/login', '/oauth2/welcome', '/', '/favicon.ico'] or \
+        request.endpoint == 'static':
         return
     token = request.headers.get('TOKEN')
     if not token:
@@ -103,6 +105,11 @@ def before_pre_request():
     gl.auth()
     g.current_user = gl.user
     g.gl = gl
+
+
+@bp.route('/')
+def render_vue():
+    return render_template('index.html')
 
 
 @bp.route('/joke')

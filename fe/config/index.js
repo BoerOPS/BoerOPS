@@ -12,11 +12,11 @@ module.exports = {
     assetsPublicPath: '/',
     // proxyTable: {},
     proxyTable: {
-      '/api': {
-        target: 'http://webhook.mail.heclouds.com',
+      '/': {
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         pathRewrite: {
-          '^/api': '/'
+          '^/': '/'
         }
       }
     },
@@ -69,7 +69,7 @@ module.exports = {
     // assetsSubDirectory: 'static',
     assetsSubDirectory: '',
     // assetsPublicPath: '/',
-    assetsPublicPath: 'static',
+    assetsPublicPath: 'static/',
 
     /**
      * Source Maps

@@ -211,7 +211,7 @@ export default {
   methods: {
     getHosts(env) {
       this.$http
-        .get("/api/hosts", {
+        .get("/hosts", {
           params: {
             env: env
           }
@@ -225,7 +225,7 @@ export default {
         });
     },
     getCurrentUser() {
-      this.$http.get("/api/currentuser").then(resp => {
+      this.$http.get("/currentuser").then(resp => {
         this.currentUser = resp.data["username"];
       });
     },
@@ -245,7 +245,7 @@ export default {
     },
     saveDeploy() {
       this.form.project_id = this.project;
-      this.$http.post("/api/projects", this.form).then(resp => {
+      this.$http.post("/projects", this.form).then(resp => {
         this.$message({
           showClose: true,
           message: resp.data,
@@ -278,9 +278,9 @@ export default {
         type: "warning"
       })
         .then(() => {
-          // "/api/branches/1?project_id=123"
+          // "/branches/1?project_id=123"
           this.$http
-            .patch("/api/branches/" + this.branch, {
+            .patch("/branches/" + this.branch, {
               project_id: this.project,
               operation: this.operation
             })
@@ -303,7 +303,7 @@ export default {
     getDetailInfo(row) {
       this.loading = true;
       this.detailInfoVisible = true;
-      this.$http.get("/api/projects/" + row.id).then(resp => {
+      this.$http.get("/projects/" + row.id).then(resp => {
         this.projectDetailInfo = resp.data;
         this.loading = false;
       });
@@ -314,7 +314,7 @@ export default {
       this.project = row.id;
       this.branch = "";
       this.$http
-        .get("/api/branches", {
+        .get("/branches", {
           params: {
             project_id: row.id
           }
@@ -324,7 +324,7 @@ export default {
           this.loading = false;
         });
       this.$http
-        .get("/api/commits", {
+        .get("/commits", {
           params: {
             project_id: row.id
           }
@@ -341,7 +341,7 @@ export default {
     getAllProject() {
       this.loading = true;
       this.$http
-        .get("/api/projects")
+        .get("/projects")
         .then(resp => {
           this.allProject = resp.data;
           this.loading = false;

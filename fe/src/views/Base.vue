@@ -49,7 +49,7 @@ export default {
         "access_token"
       );
       this.$http
-        .post("/api/projects", {
+        .post("/projects", {
           id: JSON.stringify(this.checkedIDs)
         })
         .then(resp => {

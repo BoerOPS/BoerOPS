@@ -65,7 +65,7 @@ export default {
   methods: {
     createUser() {
       this.loading = true;
-      this.$http.post("/api/webhooks", this.userInfo).then(resp => {
+      this.$http.post("/webhooks", this.userInfo).then(resp => {
         this.loading = false;
         this.createUserVisible = false;
         this.$message({

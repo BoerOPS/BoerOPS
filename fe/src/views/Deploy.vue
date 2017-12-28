@@ -96,7 +96,7 @@ export default {
   computed: {},
   methods: {
     getCurrentUser() {
-      this.$http.get("/api/currentuser").then(resp => {
+      this.$http.get("/currentuser").then(resp => {
         // console.log(resp.data);
         this.currentUser = resp.data["id"];
       });
@@ -104,7 +104,7 @@ export default {
     createDeploy() {
       var loadingText;
       var loading
-      this.$http.get("/api/joke").then(resp => {
+      this.$http.get("/joke").then(resp => {
         console.log(resp.data.joke);
         loadingText = resp.data.joke;
       });
@@ -128,7 +128,7 @@ export default {
       this.deployData["current_user"] = this.currentUser;
       this.deployData["project_id"] = this.project;
       console.log(this.deployData);
-      this.$http.post("/api/deploys", this.deployData).then(resp => {
+      this.$http.post("/deploys", this.deployData).then(resp => {
         // this.loading = false;
         loading.close();
         this.$message({
@@ -140,7 +140,7 @@ export default {
     allDeployProject() {
       this.loading = true;
       this.$http
-        .get("/api/projects", {
+        .get("/projects", {
           params: {
             ops: true
           }
@@ -157,7 +157,7 @@ export default {
       this.deployProjectVisible = true;
       this.project = row.project_id;
       this.$http
-        .get("/api/commits", {
+        .get("/commits", {
           params: {
             project_id: row.project_id
           }
