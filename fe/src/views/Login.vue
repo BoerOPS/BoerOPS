@@ -13,7 +13,7 @@
       v-else
       type="primary"
       icon="el-icon-arrow-right"
-      onclick="window.location.href='http://webhook.mail.heclouds.com/auth/login'">
+      onclick="window.location.href='/auth/login'">
       <strong style="font-size: 18px">登录</strong> with gitlab
     </el-button>
   </div>

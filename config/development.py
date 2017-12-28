@@ -2,7 +2,7 @@ from . import Config
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:123456@127.0.0.1/deploy_ops_dev'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://boer:123456@172.19.3.165/deploy_ops_dev'
     DEPLOYMENT = {
         'CHECKOUT_PATH': 'E:\\tmp',
         'DEPLOY_PATH': 'E:\\tmp\\deploy',

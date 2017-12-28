@@ -80,7 +80,7 @@ def oauth2_welcome():
         'token_type': token_type
     })
     # return redirect('http://boer.mail.heclouds.com/#/login?' + querystring)
-    return redirect('http://127.0.0.1:5000/#/login?' + querystring)
+    return redirect('/#/login?' + querystring)
 
 
 @bp.route('/auth/login')

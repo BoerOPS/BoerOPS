@@ -46,7 +46,7 @@ def create_app(config_name):
 # def load_user(id):
 #     return User.query.get(int(id))
 
-if socket.gethostname() in ['Boer-PC', 'boer-PC']:
+if socket.gethostname() in ['Boer-PC', 'boer-PC', 'Cloud_public_node01']:
     app = create_app('dev')
 else:
     app = create_app('prod')
