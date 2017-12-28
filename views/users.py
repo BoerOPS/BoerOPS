@@ -13,7 +13,7 @@ api = Api(bp)
 
 client_id = '8d3b6063c3810d8ba1698d44c96454a767232f33a8e6fa23110905310ec4d768'
 secert = '381e4e76b806ddad32f51c238386d1a0ba80fa211b48bf542c6a101cbf44a48f'
-redirect_uri = 'http://webhook.mail.heclouds.com/oauth2/welcome'
+redirect_uri = 'http://deploy.onenet.com/oauth2/welcome'
 
 
 @bp.route('/oauth2/welcome')
@@ -46,7 +46,6 @@ def oauth2_welcome():
     token_type = resp.get('token_type')
     # 入库操作
     if access_token:
-        print('---access_token--->', access_token)
         gl = gitlab.Gitlab(
             'http://gitlab.onenet.com',
             oauth_token=access_token,
@@ -118,7 +117,7 @@ def joke():
     from random import randint
     doc = pq('http://xiaohua.zol.com.cn/new/')
     jokes = [doc(i).text() for i in doc('div.summary-text')]
-    return jsonify(code=100200, joke=jokes[randint(0, len(jokes))])
+    return jsonify(code=100200, joke=jokes[randint(0, len(jokes) - 1)])
 
 
 class CurrentUser(Resource):

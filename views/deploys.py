@@ -73,7 +73,7 @@ class DeployList(Resource):
             introduce=args['version_intro'])
         config = current_app.config['DEPLOYMENT']
         ds = DeployService(deploy, config, gitlab_project_info)
-        return ds.step_1()
+        return ds.run()
 
 
 api.add_resource(Deploy, '/deploys/<int:id>', endpoint='deploy')

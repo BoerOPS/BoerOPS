@@ -102,21 +102,20 @@ export default {
       });
     },
     createDeploy() {
-      var loadingText;
-      var loading
-      this.$http.get("/joke").then(resp => {
-        console.log(resp.data.joke);
-        loadingText = resp.data.joke;
-      });
-      setTimeout(() => {
-        loading = this.$loading({
-          lock: true,
-          // text: 'Loading',
-          text: loadingText,
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.7)"
-        });
-      }, 2000);
+      // var loadingText;
+      // this.$http.get("/joke").then(resp => {
+      //   console.log(resp.data.joke);
+      //   loadingText = resp.data.joke;
+      // });
+      // setTimeout(() => {
+      //   this.$loading({
+      //     lock: true,
+      //     // text: 'Loading',
+      //     text: loadingText,
+      //     spinner: "el-icon-loading",
+      //     background: "rgba(0, 0, 0, 0.7)"
+      //   });
+      // }, 2000);
       this.deployProjectVisible = false;
       this.$message({
         dangerouslyUseHTMLString: true,
@@ -130,7 +129,6 @@ export default {
       console.log(this.deployData);
       this.$http.post("/deploys", this.deployData).then(resp => {
         // this.loading = false;
-        loading.close();
         this.$message({
           type: "success",
           message: resp.data

@@ -13,11 +13,12 @@ class DeployService:
         self.deploy_path = config.get('DEPLOY_PATH')
         self.repo_name = gitlab_project_info.get('name')
         self.repo_ssh_url = gitlab_project_info.get('repo_ssh_url')
-        self.full_checkout_path = os.path.join(self.checkout_path, self.repo_name)
+        self.full_checkout_path = os.path.join(self.checkout_path,
+                                               self.repo_name)
         self.full_deploy_path = os.path.join(self.deploy_path, self.repo_name)
 
-    def test(self):
-        return '部署成功'
+    def run(self):
+        return self.step_1()
 
     def step_1(self):
         "clone or fetch repo"
@@ -38,42 +39,37 @@ class DeployService:
         rs = subprocess.run(cmd.split(), cwd=self.full_checkout_path)
         if rs.returncode:
             return {'status': 1, 'msg': 'git reset failed'}
-        # EXCLUDE_DIRS = ['.git']
-        # EXCLUDE_FILES = ['.gitignore']
-        # os.chdir(self.checkout_path)
-        # with tarfile.open(self.full_deploy_path + '.tgz', 'w:gz') as tar:
-        #     for root, dirs, files in os.walk(self.repo_name):
-        #         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
-        #         for file in files:
-        #             if file in EXCLUDE_FILES:
-        #                 continue
-        #             fullpath = os.path.join(root, file)
-        #             tar.add(fullpath)
-        cmd = 'tar -zcf %s.tgz --exclude-vcs --exclude-vcs-ignores -C %s .' % (
-            self.repo_name, self.full_checkout_path)
-        rs = subprocess.run(cmd.split(), cwd=self.deploy_path)
-        if rs.returncode:
-            return {'status': 2, 'msg': 'shell tar failed'}
-        # self.step_2()
-        return {'status': 1, 'msg': 'prepare code success <%s>' % self.repo_name}
+        self.step_2()
+        return {
+            'status': 1,
+            'msg': 'prepare code success <%s>' % self.repo_name
+        }
 
     def step_2(self):
         # exec before commands
         DeployModel.update(self.deploy, status=2)
+        excludes = ' '.join('--exclude ' + ex for ex in ['.git', '.gitignore'])
+        cmd = 'rsync -qa --delete {exclude} {src}/ {dst}/'.format(
+            exclude=excludes,
+            src=self.full_checkout_path,
+            dst=self.full_deploy_path)
+        rs = subprocess.run(cmd.split())
+        if rs.returncode:
+            return {'status': 2, 'msg': 'rsync shell failed'}
         cmd = ' && '.join(self.deploy.project.before_cmd.split('\n')).strip()
-        rs = subprocess.run(cmd, shell=True)
+        rs = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
         if rs.returncode:
             return {'status': 2, 'msg': 'exec user custom shell failed'}
         # TODO
         # exec default commands
         cmd = 'chown -R %s:%s %s' % (self.config.get('CODE_USER'),
                                      self.config.get('CODE_GROUP'),
-                                     self.full_checkout_path)
+                                     self.full_deploy_path)
         rs = subprocess.run(cmd.split())
         if rs.returncode:
             return {'status': 2, 'msg': 'shell chown failed'}
-        cmd = 'tar -zcf %s.tgz --exclude-vcs --exclude-vcs-ignores -C %s .' % (
-            self.repo_name, self.full_checkout_path)
+        cmd = 'tar -zcf %s.tgz --exclude-vcs -C %s .' % (
+            self.repo_name, self.full_deploy_path)
         rs = subprocess.run(cmd.split(), cwd=self.deploy_path)
         if rs.returncode:
             return {'status': 2, 'msg': 'shell tar failed'}
