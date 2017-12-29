@@ -102,33 +102,20 @@ export default {
       });
     },
     createDeploy() {
-      // var loadingText;
-      // this.$http.get("/joke").then(resp => {
-      //   console.log(resp.data.joke);
-      //   loadingText = resp.data.joke;
-      // });
-      // setTimeout(() => {
-      //   this.$loading({
-      //     lock: true,
-      //     // text: 'Loading',
-      //     text: loadingText,
-      //     spinner: "el-icon-loading",
-      //     background: "rgba(0, 0, 0, 0.7)"
-      //   });
-      // }, 2000);
+      this.$http.get("/joke").then(resp => {
+        console.log(resp.data.joke);
+      });
       this.deployProjectVisible = false;
       this.$message({
         dangerouslyUseHTMLString: true,
         type: "warning",
-        message: "<h3>部署请求已发出，部署需要时间，请耐心等待！</h3>",
+        message: "<h3>部署请求已发出，部署需要时间，请耐心等待！</h3><h5>太无聊，可以打开console看个笑话哟！</h5>",
         center: true
       });
-      // this.loading = true;
       this.deployData["current_user"] = this.currentUser;
       this.deployData["project_id"] = this.project;
       console.log(this.deployData);
       this.$http.post("/deploys", this.deployData).then(resp => {
-        // this.loading = false;
         this.$message({
           type: "success",
           message: resp.data
