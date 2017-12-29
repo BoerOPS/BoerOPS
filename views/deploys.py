@@ -34,30 +34,18 @@ class DeployList(Resource):
         parser.add_argument('version_intro', help='required')
         parser.add_argument('commit', action='append', help='required')
         args = parser.parse_args()
+
         project_id = int(args['project_id'])
-        # 版本
         branch_id = args['commit'][0]
         commit_id = args['commit'][1]
         user_id = int(args['current_user'])
-        # 仓库信息 eg. git_repo
+        environment=0 if args['env'] == 'True' else 1
+
         _project = g.gl.projects.get(project_id)
-        gitlab_project_info = {
+        project_args = {
             'name': _project.attributes.get('name'),
             'repo_ssh_url': _project.attributes.get('ssh_url_to_repo')
         }
-        # 部署信息 eg. 部署前后需要执行的命令
-        project = ProjectModel.get(project_id)
-        proj_name = project.name
-        proj_before_cmd = project.before_cmd
-        proj_after_cmd = project.after_cmd
-        proj_hosts = [h.ip_addr for h in project.hosts if h.env == 1]
-        environment = 1
-        if args['env'] == 'True':
-            environment = 0
-            proj_hosts = [h.ip_addr for h in project.hosts if h.env == 0]
-        # 记录信息 eg. 发布者、时间
-        user = UserModel.get(user_id)
-        user_name = user.gitlab_username
         # deploy = DeployModel.query.filter(
         #     DeployModel.project_id == project_id, DeployModel.status != 5,
         #     DeployModel.env == environment).first()
@@ -72,7 +60,7 @@ class DeployList(Resource):
             user_id=user_id,
             introduce=args['version_intro'])
         config = current_app.config['DEPLOYMENT']
-        ds = DeployService(deploy, config, gitlab_project_info)
+        ds = DeployService(deploy, config, project_args)
         return ds.run()
 
 

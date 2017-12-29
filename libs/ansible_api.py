@@ -3,8 +3,8 @@
 import json
 from collections import namedtuple
 from ansible.parsing.dataloader import DataLoader
-from ansible.vars import VariableManager
-from ansible.inventory import Inventory, Host, Group
+from ansible.vars.manager import VariableManager
+from ansible.inventory.manager import Inventory, Host, Group
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
@@ -285,3 +285,23 @@ class MyRunner:
         for host, result in self.results_callback.task_unreachable.items():
             self.results_raw['unreachable'][host] = result._result
         return json.dumps(self.results_raw)
+
+
+def get_dynamic_inventory(proj, environ):
+    return {
+        proj.name: {
+            'hosts': [{
+                'hostname': h.ip_address,
+                'port': h.ssh_port,
+                'username': h.username,
+                'password': h.password
+            } for h in proj.hosts if h.environ == int(environ)],
+            'vars': {
+                'ansible_user': 'boer',
+                'ansible_become': True,
+                'ansible_become_method': 'sudo',
+                'ansible_become_user': 'root',
+                'ansible_become_pass': 'Admin@123'
+            }
+        }
+    }

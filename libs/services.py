@@ -3,16 +3,19 @@ import subprocess
 import tarfile
 
 from models.deploys import Deploy as DeployModel
+from models.projects import Project as ProjectModel
+
+# from libs.ansible_api import MyRunner
 
 
 class DeployService:
-    def __init__(self, deploy, config, gitlab_project_info):
+    def __init__(self, deploy, config, project_args):
         self.deploy = deploy
         self.config = config
         self.checkout_path = config.get('CHECKOUT_PATH')
         self.deploy_path = config.get('DEPLOY_PATH')
-        self.repo_name = gitlab_project_info.get('name')
-        self.repo_ssh_url = gitlab_project_info.get('repo_ssh_url')
+        self.repo_name = project_args.get('name')
+        self.repo_ssh_url = project_args.get('repo_ssh_url')
         self.full_checkout_path = os.path.join(self.checkout_path,
                                                self.repo_name)
         self.full_deploy_path = os.path.join(self.deploy_path, self.repo_name)
@@ -68,11 +71,12 @@ class DeployService:
         rs = subprocess.run(cmd.split())
         if rs.returncode:
             return {'status': 2, 'msg': 'shell chown failed'}
-        cmd = 'tar -zcf %s.tgz --exclude-vcs -C %s .' % (
-            self.repo_name, self.full_deploy_path)
+        cmd = 'tar -zcf %s.tgz --exclude-vcs -C %s .' % (self.repo_name,
+                                                         self.full_deploy_path)
         rs = subprocess.run(cmd.split(), cwd=self.deploy_path)
         if rs.returncode:
             return {'status': 2, 'msg': 'shell tar failed'}
+        self.step_3()
         return {'status': 2, 'msg': 'exec before commands success'}
 
     def step_3(self):
@@ -82,7 +86,15 @@ class DeployService:
         #     file: path=/data/www/onenet_v3 state=directory mode=0755 owner=apache group=apache
         # - name: Resource file extract
         #     unarchive: src=/data/packages/deploy_code/onenet_v3.tar.gz dest=/data/www/onenet_v3 copy=yes
-        pass
+        _p = ProjectModel.get(self.deploy.project_id)
+        resource = [{
+            'hostname': h.ip_addr,
+            'port': 22
+        } for h in _p.hosts if h.env == self.deploy.env]
+        hosts = [h.ip_addr for h in _p.hosts if h.env == self.deploy.env]
+        print(hosts)
+        # runner = MyRunner(resource)
+        # runner.run_module()
 
     def step_4(self):
         # exec after commands
