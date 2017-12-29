@@ -39,7 +39,7 @@ class DeployList(Resource):
         branch_id = args['commit'][0]
         commit_id = args['commit'][1]
         user_id = int(args['current_user'])
-        environment=0 if args['env'] == 'True' else 1
+        environment = 0 if args['env'] == 'True' else 1
 
         _project = g.gl.projects.get(project_id)
         project_args = {
@@ -61,7 +61,8 @@ class DeployList(Resource):
             introduce=args['version_intro'])
         config = current_app.config['DEPLOYMENT']
         ds = DeployService(deploy, config, project_args)
-        return ds.run()
+        # return ds.run()
+        return ds.step_3()
 
 
 api.add_resource(Deploy, '/deploys/<int:id>', endpoint='deploy')

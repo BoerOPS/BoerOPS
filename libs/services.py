@@ -5,7 +5,7 @@ import tarfile
 from models.deploys import Deploy as DeployModel
 from models.projects import Project as ProjectModel
 
-# from libs.ansible_api import MyRunner
+from libs.ansible_api import MyRunner
 
 
 class DeployService:
@@ -91,10 +91,13 @@ class DeployService:
             'hostname': h.ip_addr,
             'port': 22
         } for h in _p.hosts if h.env == self.deploy.env]
+        print('--resource-->', resource)
         hosts = [h.ip_addr for h in _p.hosts if h.env == self.deploy.env]
-        print(hosts)
-        # runner = MyRunner(resource)
-        # runner.run_module()
+        print('--hosts-->', hosts)
+        runner = MyRunner(resource)
+        runner.run_module(hosts, 'ping', '')
+        return runner.get_module_result()
+        return {'status': 3, 'msg': 'deploy code success'}
 
     def step_4(self):
         # exec after commands
