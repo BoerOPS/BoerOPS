@@ -10,3 +10,6 @@ templates
 .vscode
 .project
 ansible
+deploy_ops.sublime-project
+deploy_ops.sublime-workspace
+.codeintel

@@ -80,23 +80,28 @@ class DeployService:
         return {'status': 2, 'msg': 'exec before commands success'}
 
     def step_3(self):
+        # from ansible.utils.path import unfrackpath
+        # return unfrackpath('~/python')
         # deploy
         # Ansible copy
         # - name: Make base directory
         #     file: path=/data/www/onenet_v3 state=directory mode=0755 owner=apache group=apache
         # - name: Resource file extract
         #     unarchive: src=/data/packages/deploy_code/onenet_v3.tar.gz dest=/data/www/onenet_v3 copy=yes
+
         _p = ProjectModel.get(self.deploy.project_id)
-        resource = [{
-            'hostname': h.ip_addr,
-            'port': 22
-        } for h in _p.hosts if h.env == self.deploy.env]
-        print('--resource-->', resource)
+        # resource = [{
+        #     'hostname': h.ip_addr,
+        #     'port': 22
+        # } for h in _p.hosts if h.env == self.deploy.env]
+        # print('--resource-->', resource)
         hosts = [h.ip_addr for h in _p.hosts if h.env == self.deploy.env]
-        print('--hosts-->', hosts)
-        runner = MyRunner(resource)
-        runner.run_module(hosts, 'ping', '')
-        return runner.get_module_result()
+        from libs.runner import runner
+        runner(hosts)
+        # print('--hosts-->', hosts)
+        # runner = MyRunner(resource)
+        # runner.run_module(hosts, 'ping', '')
+        # return runner.get_module_result()
         return {'status': 3, 'msg': 'deploy code success'}
 
     def step_4(self):

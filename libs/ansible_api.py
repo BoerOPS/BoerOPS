@@ -169,7 +169,7 @@ class MyRunner:
 
         self.loader = DataLoader()
         self.options = Options(
-            connection='default_group',
+            connection='',
             module_path=None,
             forks=100,
             become=None,
@@ -179,7 +179,11 @@ class MyRunner:
             diff=False)
 
         self.passwords = dict(vault_pass='secret')
-        self.inventory = MyInventory(self.loader, resource=self.resource)
+        self.inventory = InventoryManager(self.loader)
+        for host in self.resource:
+            self.inventory.add_host(
+                host['hostname'], group='all', port=host['port'])
+        # self.inventory = MyInventory(self.loader, resource=self.resource)
         self.variable_manager = VariableManager(
             loader=self.loader, inventory=self.inventory)
         # self.variable_manager = VariableManager()
@@ -189,7 +193,7 @@ class MyRunner:
         # create play with tasks
         play_source = dict(
             name="Ansible Play",
-            hosts=hosts,
+            hosts='all',
             gather_facts='no',
             tasks=[dict(action=dict(module=module_name, args=module_args))])
         play = Play().load(
@@ -197,10 +201,10 @@ class MyRunner:
             variable_manager=self.variable_manager,
             loader=self.loader)
 
-        print('---<>', self.inventory.groups)
-        for k, v in self.inventory.hosts.items():
-            print(k, '\n------>\n', v)
-            print('====')
+        # print('---<>', self.inventory.groups)
+        # for k, v in self.inventory.hosts.items():
+        #     print(k, '\n------>\n', v)
+        #     print('====')
         self.results_callback = ModuleResultCallback()
         # actually run it
         tqm = None
