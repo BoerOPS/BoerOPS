@@ -8,7 +8,7 @@ instance.interceptors.request.use(
       config.headers.TOKEN = localStorage.getItem('access_token');
     }
     config.baseURL = '';
-    config.timeout = 50 * 1000;
+    config.timeout = 500 * 1000;
     return config;
   },
   (error) => {

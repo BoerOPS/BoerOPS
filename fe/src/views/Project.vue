@@ -143,9 +143,14 @@
                 <el-checkbox v-for="host in prodHosts" :key="host.id" :label="host.id">{{host.ip | shortIP}}</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
-            <el-form-item label="测试主机">
+            <el-form-item label="测试30">
               <el-checkbox-group v-model="form.hosts">
-                <el-checkbox v-for="host in testHosts" :key="host.id" :label="host.id">{{host.ip | shortIP}}</el-checkbox>
+                <el-checkbox v-for="host in test30Hosts" :key="host.id" :label="host.id">{{host.ip | shortIP}}</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="测试31">
+              <el-checkbox-group v-model="form.hosts">
+                <el-checkbox v-for="host in test31Hosts" :key="host.id" :label="host.id">{{host.ip | shortIP}}</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
             <el-form-item>
@@ -171,7 +176,8 @@ export default {
         hosts: []
       },
       prodHosts: [],
-      testHosts: [],
+      test30Hosts: [],
+      test31Hosts: [],
       // Admin User
       adminNewDeploy: "zhanghaibo",
       currentUser: "",
@@ -217,8 +223,10 @@ export default {
           }
         })
         .then(resp => {
-          if (env === 1) {
-            this.testHosts = resp.data;
+          if (env == 1) {
+            this.test30Hosts = resp.data;
+          } else if (env == 2) {
+            this.test31Hosts = resp.data;
           } else {
             this.prodHosts = resp.data;
           }
@@ -233,6 +241,7 @@ export default {
       this.form = { hosts: [] };
       if (this.currentUser === this.adminNewDeploy) {
         this.newDeployVisible = true;
+        this.getHosts(2);
         this.getHosts(1);
         this.getHosts(0);
         return false;

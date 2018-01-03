@@ -35,11 +35,7 @@ class HostList(Resource):
         parser.add_argument('env', help='env required')
         args = parser.parse_args()
         ip_addr = args['ip_addr']
-        env = args['env']
-        if env == 'True':
-            env = 0
-        else:
-            env = 1
+        env = int(args['env'])
         _h = HostModel.first(ip_addr=ip_addr)
         if _h is not None:
             return '主机已经存在'

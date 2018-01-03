@@ -27,8 +27,8 @@
             width="160">
             <el-tag
               slot-scope="scope"
-              :type="scope.row.env === 1 ? 'primary' : 'danger'">
-              {{scope.row.env === 1 ? '测试' : '生产'}}
+              :type="scope.row.env === 0 ? 'danger' : 'primary'">
+              {{scope.row.env === 0 ? '生产' : '测试'}}
             </el-tag>
           </el-table-column>
       </el-table>
@@ -44,7 +44,12 @@
           <el-input v-model="host.ip_addr"></el-input>
         </el-form-item>
         <el-form-item label="测试/生产">
-          <el-switch v-model="host.env"></el-switch>
+          <el-radio-group v-model="host.env" size="small">
+            <el-radio-button :label="1" >30测试</el-radio-button>
+            <el-radio-button :label="2">31测试</el-radio-button>
+            <el-radio-button :label="0">线上</el-radio-button>
+          </el-radio-group>
+          <!-- <el-switch v-model="host.env"></el-switch> -->
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="createHost">添加</el-button>

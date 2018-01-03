@@ -44,7 +44,15 @@
           </el-cascader>
         </el-form-item>
         <el-form-item label="提测/上线">
-          <el-switch v-model="deployData.env"></el-switch>
+          <el-radio-group v-model="deployData.env" size="small">
+            <el-radio-button :label="1" >30测试</el-radio-button>
+            <el-radio-button :label="2">31测试</el-radio-button>
+            <el-radio-button :label="0">线上</el-radio-button>
+          </el-radio-group>
+          <!-- <el-switch v-model="deployData.env"></el-switch> -->
+        </el-form-item>
+        <el-form-item label="重启服务">
+          <el-switch v-model="deployData.service"></el-switch>
         </el-form-item>
         <el-form-item label="版本说明">
           <el-input
@@ -55,9 +63,14 @@
           >
           </el-input>
         </el-form-item>
+        <el-form-item label="相关人员">
+          <el-checkbox-group v-model="deployData.members">
+            <el-checkbox v-for="m in allMembers" :key="m.email" :label="m.email">{{m.username}}</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
         <el-form-item>
           <el-button type="success" size="mini">multi</el-button>
-          <el-button v-if="deployData.env" type="danger" @click="createDeploy">上线</el-button>
+          <el-button v-if="deployData.env == 0" type="danger" @click="createDeploy">上线</el-button>
           <el-button v-else type="primary" @click="createDeploy">提测</el-button>
           <el-button
             @click="deployProjectVisible=false,
@@ -85,7 +98,8 @@ export default {
         commit: [],
         env: 0
       },
-      currentUser: null
+      currentUser: null,
+      allMembers: []
     };
   },
   created() {},
@@ -95,6 +109,17 @@ export default {
   },
   computed: {},
   methods: {
+    projectMembers(project) {
+      this.$http
+        .get("/projects/" + project, {
+          params: {
+            members: "all"
+          }
+        })
+        .then(resp => {
+          this.allMembers = resp.data;
+        });
+    },
     getCurrentUser() {
       this.$http.get("/currentuser").then(resp => {
         // console.log(resp.data);

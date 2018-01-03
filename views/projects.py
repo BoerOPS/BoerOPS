@@ -4,6 +4,7 @@ from flask_restful import Api, Resource, abort, reqparse
 import gitlab
 from models.projects import Project as ProjectModel
 from models.hosts import Host as HostModel
+from models.users import User as UserModel
 
 bp = Blueprint('project', __name__)
 api = Api(bp)
@@ -13,7 +14,14 @@ parser = reqparse.RequestParser()
 
 class Project(Resource):
     def get(self, id):
+        members = request.args.get('members')
         project = abort_if_project_doesnt_exist(id)
+        if members is not None:
+            _members = project.members.list(all=True)
+            return [{
+                'email': g.gl.users.get(m.id).email,
+                'name': g.gl.users.get(m.id).username
+            } for m in _members]
         return project.attributes
 
     def delete(self):
