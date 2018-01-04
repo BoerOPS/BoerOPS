@@ -42,7 +42,7 @@ def create_app(config_name):
     app.register_blueprint(webhook_bp)
     app.register_blueprint(host_bp)
 
-    return app, socketio
+    return socketio, app
 
 
 # from models.users import User
@@ -51,8 +51,6 @@ def create_app(config_name):
 #     return User.query.get(int(id))
 
 if socket.gethostname() in ['Boer-PC', 'boer-PC', 'Cloud_public_node01']:
-    # app.config.from_object(config['dev'])
-    app, socketio = create_app('dev')
+    socketio, app = create_app('dev')
 else:
-    # app.config.from_object(config['prod'])
-    app, socketio = create_app('prod')
+    socketio, app = create_app('prod')
