@@ -6,6 +6,7 @@ import router from './router'
 import axios from './api'
 import Vuex from 'vuex'
 import ElementUI from 'element-ui'
+import VueSocketio from 'vue-socket.io'
 // import 'bulma'
 import 'font-awesome/scss/font-awesome.scss'
 // import './assets/css/element-variables.scss'
@@ -14,6 +15,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 Vue.prototype.$http = axios
 Vue.use(Vuex)
 Vue.use(ElementUI)
+Vue.use(VueSocketio, 'http://deploy.onenet.com/ws/deploy_results')
 
 Vue.config.productionTip = false
 

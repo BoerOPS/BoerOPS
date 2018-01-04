@@ -4,18 +4,21 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 # from flask_login import LoginManager
 from flask_restful import Api
+from flask_socketio import SocketIO
 from flask_mail import Mail
-# import redis
+import redis
 
 from config import config
 
 db = SQLAlchemy()
+async_mode = None
+socketio = SocketIO()
+mail = Mail()
 # lm = LoginManager()
 # lm.login_view = '/user/login'
-mail = Mail()
 
-# pool = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
-# redis = redis.Redis(connection_pool=pool)
+pool = redis.ConnectionPool(host='172.19.3.165', port=6379, db=1)
+redis = redis.Redis(connection_pool=pool)
 
 
 def create_app(config_name):
@@ -26,6 +29,7 @@ def create_app(config_name):
     db.init_app(app)
     # lm.init_app(app)
     mail.init_app(app)
+    socketio.init_app(app, async_mode=async_mode)
 
     from views.deploys import bp as deploy_bp
     from views.projects import bp as project_bp
@@ -38,7 +42,7 @@ def create_app(config_name):
     app.register_blueprint(webhook_bp)
     app.register_blueprint(host_bp)
 
-    return app
+    return app, socketio
 
 
 # from models.users import User
@@ -47,6 +51,8 @@ def create_app(config_name):
 #     return User.query.get(int(id))
 
 if socket.gethostname() in ['Boer-PC', 'boer-PC', 'Cloud_public_node01']:
-    app = create_app('dev')
+    # app.config.from_object(config['dev'])
+    app, socketio = create_app('dev')
 else:
-    app = create_app('prod')
+    # app.config.from_object(config['prod'])
+    app, socketio = create_app('prod')

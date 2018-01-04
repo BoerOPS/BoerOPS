@@ -29,6 +29,7 @@
       </template>
     </el-table-column>
   </el-table>
+  <el-button type="danger">{{ testSockets }}</el-button>
   <el-dialog title="发布版本"
     :visible.sync="deployProjectVisible"
     v-loading="loading"
@@ -65,7 +66,7 @@
         </el-form-item>
         <el-form-item label="相关人员">
           <el-checkbox-group v-model="deployData.members">
-            <el-checkbox v-for="m in allMembers" :key="m.email" :label="m.email">{{m.username}}</el-checkbox>
+            <el-checkbox v-for="m in allMembers" :key="m.email" :label="m.email">{{m.name}}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
         <el-form-item>
@@ -96,16 +97,28 @@ export default {
       preBranchCommites: [],
       deployData: {
         commit: [],
-        env: 0
+        env: 0,
+        members: []
       },
       currentUser: null,
-      allMembers: []
+      allMembers: [],
+      testSockets: ""
     };
   },
   created() {},
   mounted() {
     this.allDeployProject();
     this.getCurrentUser();
+  },
+  sockets: {
+    // connect(msg) {
+    //   // console.log(msg);
+    //   this.$socket.emit("my_event", { data: "wo lianjiedao le !" });
+    // },
+    my_response(msg) {
+      // console.log(msg);
+      this.testSockets = msg.data;
+    }
   },
   computed: {},
   methods: {
@@ -118,6 +131,7 @@ export default {
         })
         .then(resp => {
           this.allMembers = resp.data;
+          console.log(resp.data);
         });
     },
     getCurrentUser() {
@@ -166,6 +180,7 @@ export default {
       this.preBranchCommites = [];
       this.deployProjectVisible = true;
       this.project = row.project_id;
+      this.projectMembers(row.project_id);
       this.$http
         .get("/commits", {
           params: {

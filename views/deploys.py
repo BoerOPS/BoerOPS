@@ -1,6 +1,8 @@
 from flask import Blueprint, g, current_app
 from flask_restful import Api, Resource, reqparse
+from flask_socketio import emit
 
+from app import socketio, redis
 from models.projects import Project as ProjectModel
 from models.hosts import Host as HostModel
 from models.users import User as UserModel
@@ -8,15 +10,59 @@ from models.deploys import Deploy as DeployModel
 from libs.services import DeployService
 
 import time
+from threading import Lock
 
 bp = Blueprint('deploy', __name__)
 api = Api(bp)
+
+thread = None
+thread_lock = Lock()
+
+pubsub = redis.pubsub()
+channel = 'deploy'
+
+
+def background_thread(channel):
+    pubsub.subscribe(channel)
+    for msg in pubsub.listen():
+        if msg['type'] == 'message':
+            socketio.emit(
+                'my_response', {'data': msg['data'].decode('utf-8')},
+                namespace='/ws/deploy_results')
+
+
+@socketio.on('connect', namespace='/ws/deploy_results')
+def connect():
+    global thread
+    with thread_lock:
+        if thread is None:
+            thread = socketio.start_background_task(background_thread, channel)
+    emit('my_response', {'data': 'Welcome'})
+
+
+@socketio.on('my_event', namespace='/ws/deploy_results')
+def send_message(msg):
+    emit('my_response', {'data': msg['data']})
+
+# @socketio.on('my_broadcast_event', namespace='/ws/deploy_results')
+# def send_broadcast_message(message):
+#     emit(
+#         'my_response', {'data': 'Welcome ' + g.current_user.username},
+#         broadcast=True)
+
+
+@socketio.on('disconnect', namespace='/ws/deploy_results')
+def disconnect():
+    pubsub.unsubscribe(channel)
+    print('Client disconnected')
+
 
 parser = reqparse.RequestParser()
 
 
 class Deploy(Resource):
     def get(self, id):
+        emit('my_response', {'data': 'deploy test'})
         return {'task': 'done'}
 
     def delete(self, id):
@@ -49,11 +95,11 @@ class DeployList(Resource):
             'repo_ssh_url': _project.attributes.get('ssh_url_to_repo'),
             'service': service
         }
-        deploy = DeployModel.query.filter(
-            DeployModel.project_id == project_id, DeployModel.status != 5,
-            DeployModel.env == environment).first()
-        if deploy is not None:
-            return {'status': 0, 'msg': '当前项目在当前环境上有未完成的部署任务，请稍后！'}
+        # deploy = DeployModel.query.filter(
+        #     DeployModel.project_id == project_id, DeployModel.status != 5,
+        #     DeployModel.env == environment).first()
+        # if deploy is not None:
+        #     return {'status': 0, 'msg': '当前项目在当前环境上有未完成的部署任务，请稍后！'}
         deploy = DeployModel.create(
             status=0,
             project_id=project_id,
