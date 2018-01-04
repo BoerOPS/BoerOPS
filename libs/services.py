@@ -2,11 +2,12 @@ import os
 import subprocess
 import tarfile
 
-from flask_socketio import emit
+from app import redis
 
 from models.deploys import Deploy as DeployModel
 from models.projects import Project as ProjectModel
 from app import socketio
+
 
 class DeployService:
     def __init__(self, deploy, config, project_args):
@@ -80,22 +81,22 @@ class DeployService:
         DeployModel.update(self.deploy, status=3)
         _p = ProjectModel.get(self.deploy.project_id)
         hosts = [h.ip_addr for h in _p.hosts if h.env == self.deploy.env]
-        # from libs.runner import MyRunner
-        # self.runner = MyRunner(hosts)
-        # opj = os.path.join
-        # self.runner.run_module(
-        #     'file', 'path=%s state=directory mode=0755 owner=%s group=%s' %
-        #     (opj('/tmp', self.repo_name), self.config.get('CODE_USER'),
-        #      self.config.get('CODE_GROUP')))
-        # print('---mkdir--->', self.runner.get_module_results())
-        # self.runner.run_module('unarchive', 'src=%s dest=%s copy=yes' %
-        #                        (opj(self.deploy_path, self.repo_name + '.tgz'),
-        #                         opj('/tmp', self.repo_name)))
-        # res = self.runner.get_module_results()
-        # if res.get('failed'):
-        #     return res.get('failed')
-        # elif res.get('unreachable'):
-        #     return res.get('unreachable')
+        from libs.runner import MyRunner
+        self.runner = MyRunner(hosts)
+        opj = os.path.join
+        self.runner.run_module(
+            'file', 'path=%s state=directory mode=0755 owner=%s group=%s' %
+            (opj('/tmp', self.repo_name), self.config.get('CODE_USER'),
+             self.config.get('CODE_GROUP')))
+        print('---mkdir--->', self.runner.get_module_results())
+        self.runner.run_module('unarchive', 'src=%s dest=%s copy=yes' %
+                               (opj(self.deploy_path, self.repo_name + '.tgz'),
+                                opj('/tmp', self.repo_name)))
+        res = self.runner.get_module_results()
+        if res.get('failed'):
+            return res.get('failed')
+        elif res.get('unreachable'):
+            return res.get('unreachable')
         return self.step_4()
 
     def step_4(self):
@@ -109,7 +110,9 @@ class DeployService:
                 return res.get('failed')
             elif res.get('unreachable'):
                 return res.get('unreachable')
-        return 'deploy ok'
+        redis.publish('deploy', self.deploy.project.name + '部署成功')
+        DeployModel.update(self.deploy, status=5)
+        return self.deploy.project.name + '部署成功'
 
     def rsync_local(self, src, dest, excludes=[]):
         excludes.append('.git')
