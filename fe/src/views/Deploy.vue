@@ -70,15 +70,10 @@
           </el-checkbox-group>
         </el-form-item>
         <el-form-item>
-          <el-button type="success" size="mini">multi</el-button>
+          <!-- <el-button type="success" size="mini">multi</el-button> -->
           <el-button v-if="deployData.env == 0" type="danger" @click="createDeploy">上线</el-button>
           <el-button v-else type="primary" @click="createDeploy">提测</el-button>
-          <el-button
-            @click="deployProjectVisible=false,
-            deployData={},
-            preBranchCommites=[]">
-            取消
-          </el-button>
+          <el-button @click="cancel">取消</el-button>
         </el-form-item>
       </el-form>
     </el-container>
@@ -86,6 +81,11 @@
 </el-container>
 </template>
 <script>
+const DEFAULT = {
+  commit: [],
+  env: 1,
+  members: []
+};
 export default {
   name: "Deploy",
   data() {
@@ -95,11 +95,7 @@ export default {
       allProject: [],
       deployProjectVisible: false,
       preBranchCommites: [],
-      deployData: {
-        commit: [],
-        env: 0,
-        members: []
-      },
+      deployData: { ...DEFAULT },
       currentUser: null,
       allMembers: [],
       testSockets: ""
@@ -122,6 +118,11 @@ export default {
   },
   computed: {},
   methods: {
+    cancel() {
+      this.deployProjectVisible = false;
+      this.deployData = { ...DEFAULT };
+      this.preBranchCommites = [];
+    },
     projectMembers(project) {
       this.$http
         .get("/projects/" + project, {
@@ -136,7 +137,6 @@ export default {
     },
     getCurrentUser() {
       this.$http.get("/currentuser").then(resp => {
-        // console.log(resp.data);
         this.currentUser = resp.data["id"];
       });
     },
@@ -148,12 +148,11 @@ export default {
       this.$message({
         dangerouslyUseHTMLString: true,
         type: "warning",
-        message: "<h3>部署请求已发出，部署需要时间，请耐心等待！</h3><h5>太无聊，可以打开console看个笑话哟！</h5>",
-        center: true
+        message: "<h3>部署请求已发出，部署需要时间，请耐心等待！</h3><p>太无聊，可以打开console看个笑话哟！</p>"
+        // center: true
       });
       this.deployData["current_user"] = this.currentUser;
       this.deployData["project_id"] = this.project;
-      console.log(this.deployData);
       this.$http.post("/deploys", this.deployData).then(resp => {
         this.$message({
           type: "success",
@@ -176,7 +175,7 @@ export default {
         });
     },
     deployProject(row) {
-      this.deployData = {};
+      this.deployData = { ...DEFAULT };
       this.preBranchCommites = [];
       this.deployProjectVisible = true;
       this.project = row.project_id;
@@ -200,5 +199,15 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-
+.el-checkbox + .el-checkbox {
+  margin: 0;
+}
+.el-checkbox-group {
+  text-align: left;
+}
+.el-checkbox {
+  display: inline-block;
+  width: 25%;
+  box-sizing: border-box;
+}
 </style>
