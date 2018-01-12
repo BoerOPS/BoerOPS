@@ -110,7 +110,8 @@ class DeployList(Resource):
             introduce=args['version_intro'])
         config = current_app.config['DEPLOYMENT']
         ds = DeployService(deploy, config, project_args)
-        return ds.run()
+        ds.run()
+        return '部署请求已发出，稍后请查收消息'
 
 
 api.add_resource(Deploy, '/deploys/<int:id>', endpoint='deploy')
