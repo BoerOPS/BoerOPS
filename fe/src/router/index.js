@@ -63,21 +63,21 @@ var router = new Router({
   ]
 })
 
-// router.beforeEach((to, from, next) => {
-//   let access_token = localStorage.getItem('access_token');
-//   if (!access_token || access_token === 'null') {
-//     if (to.name != 'Login') {
-//       next({ path: '/login' });
-//     } else {
-//       next();
-//     }
-//   } else {
-//     if (to.name == 'Login') {
-//       next('/');
-//     } else {
-//       next();
-//     }
-//   }
-// })
+router.beforeEach((to, from, next) => {
+  let access_token = localStorage.getItem('access_token');
+  if (!access_token || access_token === 'null') {
+    if (to.name != 'Login') {
+      next({ path: '/login' });
+    } else {
+      next();
+    }
+  } else {
+    if (to.name == 'Login') {
+      next('/');
+    } else {
+      next();
+    }
+  }
+})
 
 export default router;

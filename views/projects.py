@@ -108,10 +108,16 @@ class Branch(Resource):
         # 分支
         branch = project.branches.get(id)
         if operation == 'protect':
-            branch.protect()
+            try:
+                branch.protect()
+            except gitlab.exceptions.GitlabProtectError:
+                return '权限不足，请联系Master'
             return '已锁定'
         elif operation == 'unprotect':
-            branch.unprotect()
+            try:
+                branch.unprotect()
+            except gitlab.exceptions.GitlabProtectError:
+                return '权限不足，请联系Master'
             return '已解锁'
 
 
