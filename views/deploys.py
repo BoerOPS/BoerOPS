@@ -7,6 +7,7 @@ from models.projects import Project as ProjectModel
 from models.hosts import Host as HostModel
 from models.users import User as UserModel
 from models.deploys import Deploy as DeployModel
+from models.deploylogs import DeployLog as LogModel
 from libs.services import DeployService
 
 import time
@@ -114,5 +115,24 @@ class DeployList(Resource):
         return '部署请求已发出，稍后请查收消息'
 
 
+class DeployLog(Resource):
+    def patch(self, id):
+        # parser.add_argument('lid', help='lid required')
+        # args = parser.parse_args()
+        # id = args['lid']
+        log = LogModel.get(id)
+        LogModel.update(log, readed=1)
+        return 'updated'
+
+
+class DeployLogList(Resource):
+    def get(self):
+        logs = LogModel.find(
+            readed=0, user_id=g.current_user.attributes.get('id'))
+        return [{'id': l.id, 'msg': l.log} for l in logs]
+
+
 api.add_resource(Deploy, '/deploys/<int:id>', endpoint='deploy')
 api.add_resource(DeployList, '/deploys', endpoint='deploys')
+api.add_resource(DeployLog, '/logs/<int:id>', endpoint='log')
+api.add_resource(DeployLogList, '/logs', endpoint='logs')
