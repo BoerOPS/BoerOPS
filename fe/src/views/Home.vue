@@ -56,10 +56,7 @@ export default {
     };
   },
   //created、mounted、updated、destroyed
-  created: function() {
-    // console.log(localStorage.getItem('access_token'));
-    // console.log(localStorage.getItem('refresh_token'));
-  },
+  created: function() {},
   mounted: function() {},
   computed: {},
   methods: {
