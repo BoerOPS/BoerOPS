@@ -5,14 +5,7 @@
         <h3>{{ item }}</h3>
       </el-carousel-item>
     </el-carousel>
-    <el-dropdown trigger="click" @command="handleCommand">
-      <el-badge :value="userMessages.length" class="el-dropdown-link">
-        <el-button size="small">最新消息</el-button>
-      </el-badge>
-      <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item v-for="m in userMessages" :key="m.id" :command="m.id">{{ m.msg }}</el-dropdown-item>
-      </el-dropdown-menu>
-    </el-dropdown>
+    <user-message></user-message>
     <el-button @click="getAllProject" type="info">项目</el-button>
     <el-button @click="$router.push({name: 'Host'})" type="success">主机</el-button>
     <el-button @click="$router.push({name: 'Deploy'})" type="primary">部署</el-button>
@@ -53,6 +46,7 @@
 </template>
 
 <script>
+import userMessage from "@/components/userMessage";
 export default {
   name: "Home",
   data() {
@@ -60,37 +54,17 @@ export default {
       msg: "Login in with gitlab.",
       createUserVisible: false,
       loading: false,
-      userInfo: {},
-      userMessages: []
+      userInfo: {}
     };
+  },
+  components: {
+    userMessage
   },
   //created、mounted、updated、destroyed
   created: function() {},
-  mounted: function() {
-    this.getMessages();
-  },
+  mounted: function() {},
   computed: {},
   methods: {
-    handleCommand(command) {
-      // this.userMessages = this.userMessages.filter(element => {
-      //   element.id != command;
-      // });
-      this.$message("消息: " + command + " 已标记为已读状态");
-      this.userMessages.forEach(element => {
-        if (element.id == command) {
-          let index = this.userMessages.indexOf(element);
-          this.userMessages.splice(index, 1);
-        }
-      });
-      this.$http.patch("/logs/" + command).then(resp => {
-        console.log(resp.data);
-      });
-    },
-    getMessages() {
-      this.$http.get("/logs").then(resp => {
-        this.userMessages = resp.data;
-      });
-    },
     createUser() {
       this.loading = true;
       this.$http.post("/webhooks", this.userInfo).then(resp => {

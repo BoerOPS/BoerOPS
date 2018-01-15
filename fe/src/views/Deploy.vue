@@ -1,4 +1,5 @@
 <template>
+<div>
 <el-container>
   <el-table
     v-loading="loading"
@@ -29,7 +30,6 @@
       </template>
     </el-table-column>
   </el-table>
-  <el-button type="danger">{{ testSockets }}</el-button>
   <el-dialog title="发布版本"
     :visible.sync="deployProjectVisible"
     v-loading="loading"
@@ -79,8 +79,11 @@
     </el-container>
   </el-dialog>
 </el-container>
+<user-message :okIncrement="okIncrement"></user-message>
+</div>
 </template>
 <script>
+import userMessage from "@/components/userMessage";
 const DEFAULT = {
   commit: [],
   env: 1,
@@ -98,8 +101,11 @@ export default {
       deployData: { ...DEFAULT },
       currentUser: null,
       allMembers: [],
-      testSockets: ""
+      okIncrement: 0
     };
+  },
+  components: {
+    userMessage
   },
   created() {},
   mounted() {
@@ -112,8 +118,9 @@ export default {
     //   this.$socket.emit("my_event", { data: "wo lianjiedao le !" });
     // },
     my_response(msg) {
-      // console.log(msg);
-      this.testSockets = msg.data;
+      if (msg.data.endsWith("部署成功")) {
+        this.okIncrement++;
+      }
     }
   },
   computed: {},
