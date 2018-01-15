@@ -1,15 +1,17 @@
 import os
 import subprocess
 import tarfile
+from threading import Thread
 
 from app import redis
 
 from models.deploys import Deploy as DeployModel
 from models.projects import Project as ProjectModel
+from models.deploylogs import DeployLog as LogModel
 from app import socketio
 
 
-class DeployService:
+class DeployService(Thread):
     def __init__(self, deploy, config, project_args):
         self.deploy = deploy
         self.config = config
@@ -22,11 +24,17 @@ class DeployService:
                                                self.repo_name)
         self.full_deploy_path = os.path.join(self.deploy_path, self.repo_name)
         self.runner = None
+        self.deploylog = LogModel.create(
+            log='部署开始',
+            deploy_id=self.deploy.id,
+            user_id=self.deploy.deployer.id,
+            readed=0)
+        super().__init__()
 
     def run(self):
-        return self.step_1()
+        self.stage_1()
 
-    def step_1(self):
+    def stage_1(self):
         "clone or fetch repo"
         # prepare code
         DeployModel.update(self.deploy, status=1)
@@ -35,19 +43,22 @@ class DeployService:
             cmd = 'git reset -q --hard origin/master && git fetch --all -q'
             rs = subprocess.run(cmd, shell=True, cwd=self.full_checkout_path)
             if rs.returncode:
+                LogModel.update(self.deploylog, log='git fetch failed')
                 return {'status': 1, 'msg': 'git fetch failed'}
         else:
             cmd = 'git clone -q %s %s' % (self.repo_ssh_url, self.repo_name)
             rs = subprocess.run(cmd.split(), cwd=self.checkout_path)
             if rs.returncode:
+                LogModel.update(self.deploylog, log='git clone failed')
                 return {'status': 1, 'msg': 'git clone failed'}
         cmd = 'git reset -q --hard %s' % self.deploy.commit_id
         rs = subprocess.run(cmd.split(), cwd=self.full_checkout_path)
         if rs.returncode:
+            LogModel.update(self.deploylog, log='git reset failed')
             return {'status': 1, 'msg': 'git reset failed'}
-        return self.step_2()
+        self.stage_2()
 
-    def step_2(self):
+    def stage_2(self):
         # exec before commands
         DeployModel.update(self.deploy, status=2)
         excludes = ' '.join('--exclude ' + ex for ex in ['.git', '.gitignore'])
@@ -57,10 +68,13 @@ class DeployService:
             dst=self.full_deploy_path)
         rs = subprocess.run(cmd.split())
         if rs.returncode:
+            LogModel.update(self.deploylog, log='rsync shell failed')
             return {'status': 2, 'msg': 'rsync shell failed'}
         cmd = ' && '.join(self.deploy.project.before_cmd.split('\n')).strip()
         rs = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
         if rs.returncode:
+            LogModel.update(
+                self.deploylog, log='exec user custom shell failed')
             return {'status': 2, 'msg': 'exec user custom shell failed'}
         # exec default commands
         cmd = 'sudo chown -R %s:%s %s' % (self.config.get('CODE_USER'),
@@ -68,15 +82,17 @@ class DeployService:
                                           self.full_deploy_path)
         rs = subprocess.run(cmd.split())
         if rs.returncode:
+            LogModel.update(self.deploylog, log='shell chown failed')
             return {'status': 2, 'msg': 'shell chown failed'}
         cmd = 'tar -zcf %s.tgz --exclude-vcs -C %s .' % (self.repo_name,
                                                          self.full_deploy_path)
         rs = subprocess.run(cmd.split(), cwd=self.deploy_path)
         if rs.returncode:
+            LogModel.update(self.deploylog, log='shell tar failed')
             return {'status': 2, 'msg': 'shell tar failed'}
-        return self.step_3()
+        self.stage_3()
 
-    def step_3(self):
+    def stage_3(self):
         # deploy
         DeployModel.update(self.deploy, status=3)
         _p = ProjectModel.get(self.deploy.project_id)
@@ -93,25 +109,27 @@ class DeployService:
                                (opj(self.deploy_path, self.repo_name + '.tgz'),
                                 opj('/tmp', self.repo_name)))
         res = self.runner.get_module_results()
-        if res.get('failed'):
-            return res.get('failed')
-        elif res.get('unreachable'):
-            return res.get('unreachable')
-        return self.step_4()
+        if res.get('failed') or res.get('unreachable'):
+            LogModel.update(
+                self.deploylog, log='exec unarchive ansible failed')
+            return res.get('failed') + res.get('unreachable')
+        self.stage_4()
 
-    def step_4(self):
+    def stage_4(self):
         # exec after commands
         DeployModel.update(self.deploy, status=4)
         if self.service:
             print('----service---->', self.service)
             self.runner.run_module('service', 'name=php-fpm state=restarted')
             res = self.runner.get_module_results()
-            if res.get('failed'):
-                return res.get('failed')
-            elif res.get('unreachable'):
-                return res.get('unreachable')
+            if res.get('failed') or res.get('unreachable'):
+                LogModel.update(
+                    self.deploylog, log='exec service ansible failed')
+                return res.get('failed') + res.get('unreachable')
         redis.publish('deploy', self.deploy.project.name + '部署成功')
         DeployModel.update(self.deploy, status=5)
+        LogModel.update(
+            self.deploylog, log='%s: 部署成功' % self.deploy.project.name)
         return self.deploy.project.name + '部署成功'
 
     def rsync_local(self, src, dest, excludes=[]):
