@@ -1,7 +1,7 @@
 <template>
   <div class="user-message">
     <el-dropdown trigger="click" @command="handleCommand">
-      <el-badge :value="userMessages.length + okIncrement" class="el-dropdown-link">
+      <el-badge :value="userMessages.length" class="el-dropdown-link">
         <el-button size="small">最新消息</el-button>
       </el-badge>
       <el-dropdown-menu slot="dropdown">
@@ -12,6 +12,7 @@
 </template>
 <script>
 export default {
+  name: "userMsg",
   data() {
     return {
       userMessages: []
@@ -24,7 +25,6 @@ export default {
     }
   },
   mounted: function() {
-    debugger;
     this.getMessages();
   },
   methods: {

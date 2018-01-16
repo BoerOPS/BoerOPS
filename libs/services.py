@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tarfile
+import json
 from threading import Thread
 
 from app import redis
@@ -126,21 +127,15 @@ class DeployService(Thread):
                 LogModel.update(
                     self.deploylog, log='exec service ansible failed')
                 return res.get('failed') + res.get('unreachable')
-        redis.publish('deploy', self.deploy.project.name + '部署成功')
         DeployModel.update(self.deploy, status=5)
         LogModel.update(
             self.deploylog, log='%s: 部署成功' % self.deploy.project.name)
+        # publish_data = {
+        #     'id': self.deploylog.id,
+        #     'msg': self.deploy.project.name + '部署成功'
+        # }
+        # redis.publish('deploy', json.dumps(publish_data))
         return self.deploy.project.name + '部署成功'
-
-    def rsync_local(self, src, dest, excludes=[]):
-        excludes.append('.git')
-        exclude_args = ''
-        for e in excludes:
-            exclude_args = exclude_args + ' --exclude %s' % e
-        cmd = 'rsync -qa --delete %s %s%s %s%s' % (exclude_args, src, os.sep,
-                                                   dest, os.sep)
-        rc = subprocess.check_call(cmd.split())
-
 
 # 发邮件任务
 # @celery.task

@@ -79,7 +79,7 @@
     </el-container>
   </el-dialog>
 </el-container>
-<user-message :okIncrement="okIncrement"></user-message>
+<user-message ref="userMsg"></user-message>
 </div>
 </template>
 <script>
@@ -100,8 +100,7 @@ export default {
       preBranchCommites: [],
       deployData: { ...DEFAULT },
       currentUser: null,
-      allMembers: [],
-      okIncrement: 0
+      allMembers: []
     };
   },
   components: {
@@ -118,13 +117,21 @@ export default {
     //   this.$socket.emit("my_event", { data: "wo lianjiedao le !" });
     // },
     my_response(msg) {
-      if (msg.data.endsWith("部署成功")) {
-        this.okIncrement++;
+      var _this = this;
+      console.log(msg.data);
+      let msg_data = JSON.parse(msg.data);
+      if (msg_data.msg.endsWith("部署成功")) {
+        _this.$refs.userMsg.userMessages.push(msg_data);
       }
     }
   },
   computed: {},
   methods: {
+    getMessages() {
+      this.$http.get("/logs").then(resp => {
+        this.userMessages = resp.data;
+      });
+    },
     cancel() {
       this.deployProjectVisible = false;
       this.deployData = { ...DEFAULT };

@@ -38,7 +38,7 @@ def connect():
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(background_thread, channel)
-    emit('my_response', {'data': 'Welcome'})
+    # emit('my_response', {'data': 'Welcome'})
 
 
 @socketio.on('my_event', namespace='/ws/deploy_results')

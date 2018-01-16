@@ -1,4 +1,6 @@
-from app import db
+from app import db, redis
+
+import json
 
 
 class Base:
@@ -50,6 +52,14 @@ class Base:
 
     @classmethod
     def update(cls, record, **kwargs):
+        if cls.__name__ == 'DeployLog' and 'log' in kwargs:
+            publish_data = {
+                'id': record.id,
+                'msg': record.deploy.project.name + '部署成功'
+            }
+            print('------------------->', publish_data)
+            redis.publish('deploy', json.dumps(publish_data))
+            # print('--->Model Base--->', cls.__name__, kwargs['log'])
         for k, v in kwargs.items():
             setattr(record, k, v)
         db.session.commit()

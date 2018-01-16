@@ -65,14 +65,11 @@ class MyRunner:
         self.passwords = dict(vault_pass='secret')
 
         # create inventory and pass to var manager
-        self.inventory = InventoryManager(
-            loader=self.loader, sources=self.sources)
+        self.inventory = InventoryManager(self.loader, sources=self.sources)
         self.variable_manager = VariableManager(
             loader=self.loader, inventory=self.inventory)
 
     def run_module(self, module, module_args):
-        print('--groups-->', self.inventory.groups)
-        print('--hosts-->', self.inventory.hosts)
         # create play with tasks
         play_source = dict(
             name="Ansible Module Play",
