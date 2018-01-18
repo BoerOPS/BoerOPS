@@ -36,6 +36,8 @@ class MyRunner:
     def __init__(self, hosts):
         self.hosts = hosts
         self.sources = ','.join(hosts)
+        if len(hosts) == 1:
+            self.sources += ','
         self.loader = None
         self.options = None
         self.passwords = None
